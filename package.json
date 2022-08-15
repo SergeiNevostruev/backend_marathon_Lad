@@ -1,0 +1,28 @@
+{
+  "name": "backend_marathon_lad",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bson": ""
+  },
+  "keywords": [],
+  "author": {
+    "name": "Nevostruev Sergei",
+    "email": "sergnevo@rambler.ru"
+  },
+  "contributes": {
+    "name": "Nevostruev Sergei",
+    "email": "sergnevo@rambler.ru"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "private": true,
+  "license": "ISC",
+  "engines" : {
+    "npm" : ">=8.5.5",
+    "node" : ">=16.14.0"
+  }
+}

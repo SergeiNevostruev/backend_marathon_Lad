@@ -1,0 +1,316 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "orders": {
+      "type": "array",
+      "items": [{
+        "type": "object",
+        "properties": {
+          "readyForDelivery": {
+            "type": "boolean"
+          },
+          "finalDocument": {
+            "type": "boolean"
+          },
+          "receiverStreet": {
+            "type": "string"
+          },
+          "receiverLocation": {
+            "type": "string"
+          },
+          "receiverHouse": {
+            "type": "string"
+          },
+          "receiverBuilding": {
+            "type": "string"
+          },
+          "receiverCorpus": {
+            "type": "string"
+          },
+          "receiverFlat": {
+            "type": "string"
+          },
+          "fragile": {
+            "type": "boolean"
+          },
+          "mailСategory": {
+            "type": "string"
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "receiverCityName": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "index": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "deliveryId": {
+            "type": "integer"
+          },
+          "barcode": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "products": {
+            "type": "array",
+            "items": [{
+              "type": "object",
+              "properties": {
+                "readyForDelivery": {
+                  "type": "boolean"
+                },
+                "finalDocument": {
+                  "type": "boolean"
+                },
+                "receiverStreet": {
+                  "type": "string"
+                },
+                "receiverLocation": {
+                  "type": "string"
+                },
+                "receiverHouse": {
+                  "type": "string"
+                },
+                "receiverBuilding": {
+                  "type": "string"
+                },
+                "receiverCorpus": {
+                  "type": "string"
+                },
+                "receiverFlat": {
+                  "type": "string"
+                },
+                "fragile": {
+                  "type": "boolean"
+                },
+                "mailСategory": {
+                  "type": "string"
+                },
+                "clientName": {
+                  "type": "string"
+                },
+                "orderId": {
+                  "type": "string"
+                },
+                "receiverCityName": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "index": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "deliveryId": {
+                  "type": "integer"
+                },
+                "barcode": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": "integer"
+                },
+                "products": {
+                  "type": "array",
+                  "items": [{
+                    "type": "object",
+                    "properties": {
+                      "productArt": {
+                        "type": "string"
+                      },
+                      "productName": {
+                        "type": "string"
+                      },
+                      "productUuid": {
+                        "type": "string"
+                      },
+                      "quantity": {
+                        "type": "integer"
+                      },
+                      "sku": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "weight": {
+                        "type": "number"
+                      },
+                      "gtin": {
+                        "type": "string"
+                      },
+                      "serialNumberMark": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "productArt",
+                      "productName",
+                      "productUuid",
+                      "quantity",
+                      "sku",
+                      "status",
+                      "weight",
+                      "gtin",
+                      "serialNumberMark"
+                    ]
+                  }]
+                },
+                "transportPallet": {
+                  "type": "string"
+                },
+                "postOffice": {
+                  "type": "string"
+                },
+                "orderCreatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "mailType": {
+                  "type": "string"
+                },
+                "deliveryStatus": {
+                  "type": "array",
+                  "items": [{
+                    "type": "object",
+                    "properties": {
+                      "deliveryStatusDate": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "deliveryCode": {
+                        "type": "integer"
+                      },
+                      "deliveryAttr": {
+                        "type": "integer"
+                      },
+                      "deliveryStatus": {
+                        "type": "string"
+                      },
+                      "_id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "deliveryStatusDate",
+                      "deliveryCode",
+                      "deliveryAttr",
+                      "deliveryStatus",
+                      "_id"
+                    ]
+                  }]
+                }
+              },
+              "required": [
+                "readyForDelivery",
+                "finalDocument",
+                "receiverStreet",
+                "receiverLocation",
+                "receiverHouse",
+                "receiverBuilding",
+                "receiverCorpus",
+                "receiverFlat",
+                "fragile",
+                "mailСategory",
+                "clientName",
+                "orderId",
+                "receiverCityName",
+                "region",
+                "index",
+                "status",
+                "phone",
+                "deliveryId",
+                "barcode",
+                "weight",
+                "products",
+                "transportPallet",
+                "postOffice",
+                "orderCreatedAt",
+                "mailType",
+                "deliveryStatus"
+              ]
+            }]
+          }
+        },
+        "required": [
+          "readyForDelivery",
+          "finalDocument",
+          "receiverStreet",
+          "receiverLocation",
+          "receiverHouse",
+          "receiverBuilding",
+          "receiverCorpus",
+          "receiverFlat",
+          "fragile",
+          "mailСategory",
+          "clientName",
+          "orderId",
+          "receiverCityName",
+          "region",
+          "index",
+          "status",
+          "phone",
+          "deliveryId",
+          "barcode",
+          "weight",
+          "products"
+        ]
+      }]
+    },
+    "storeId": {
+      "type": "string"
+    },
+    "postOffice": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "id",
+    "status",
+    "name",
+    "orders",
+    "storeId",
+    "postOffice",
+    "createdAt",
+    "updatedAt"
+  ]
+}
