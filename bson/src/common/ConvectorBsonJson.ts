@@ -2,8 +2,8 @@ import { Schema } from "jsonschema";
 import { access, readFile, mkdir, writeFile } from "fs/promises";
 import { constants, existsSync, mkdirSync } from "fs";
 import { Validator } from "jsonschema";
-import BSON, { deserialize, serialize, Binary } from "bson";
-import { join, basename, parse } from "path";
+import { deserialize, serialize } from "bson";
+import { join, parse } from "path";
 import returnText from "./returnText";
 import config from "../../config";
 
