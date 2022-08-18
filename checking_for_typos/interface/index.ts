@@ -17,3 +17,5 @@ interface IYaResponseOne {
 }
 
 export type IYaResponse = IYaResponseOne[];
+
+export type TypeMethod = "yandex-speller-api" | "nspell"; // онлайн и офлайн обработка текста
