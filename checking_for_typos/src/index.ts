@@ -3,7 +3,7 @@ import { TextCorrector } from "./common/TextCorrector";
 const correctorYA = new TextCorrector("yandex-speller-api");
 const correctorNS = new TextCorrector("nspell");
 const misspelledText = `Пришло теплое лето. На
-лисной опушки распускаюца колоколчики, незабутки, шыповник. Белые ромашки
+лисной апушки распускаюца колоколчики, незабутки, шыповник. Белые ромашки
 пратягивают к сонцу свои нежные лепески. Вылитают из уютных гнёзд птинцы. У
 зверей взраслеет смена. Мидвежата старше всех. Они радились еще холодной зимой
 в берлоги. Теперь они послушно следуют за строгай матерью. Рыжые лесята весело
@@ -12,6 +12,9 @@ const misspelledText = `Пришло теплое лето. На
 ежата.`;
 
 (async () => {
-  // console.log(await correctorYA.correctText(misspelledText));
   console.log(await correctorNS.correctText(misspelledText));
+})();
+
+(async () => {
+  console.log(await correctorYA.correctText(misspelledText));
 })();
