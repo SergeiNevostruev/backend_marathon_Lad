@@ -16,6 +16,11 @@ interface IYaResponseOne {
   s: string[];
 }
 
+export interface IConfig {
+  yaUrl: string;
+  nSpellResult: "variants" | "any-one-option";
+}
+
 export type IYaResponse = IYaResponseOne[];
 
 export type TypeMethod = "yandex-speller-api" | "nspell"; // онлайн и офлайн обработка текста

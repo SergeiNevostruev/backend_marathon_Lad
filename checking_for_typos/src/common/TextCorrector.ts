@@ -1,6 +1,6 @@
 import axios from "axios";
 import config from "../../config";
-import { IYaResponse, IYaRequest, TypeMethod } from "../../interface";
+import { IYaResponse, IYaRequest, TypeMethod, IConfig } from "../../interface";
 import natural from "natural";
 import dictionaryRu from "dictionary-ru";
 import NSpell from "nspell";
@@ -75,11 +75,26 @@ class NSpeller implements ISpotter {
       wordsToken,
       dictionaryRu
     );
+    const returnWord = (word: any, config: IConfig["nSpellResult"]) => {
+      switch (config) {
+        case "any-one-option":
+          return word[1][0];
+          break;
+        case "variants":
+          return `<?? ${word[1].join(" | ")} ??>`;
+          break;
+        default:
+          return word[0];
+          break;
+      }
+    };
     for (const word of correctedWords) {
       reg = new RegExp(word[0], "g");
       newText = newText.replace(
         reg,
-        word[1].length === 1 ? word[1][0] : `<?? ${word[1].join(" | ")} ??>`
+        word[1].length === 1
+          ? word[1][0]
+          : returnWord(word, config.nSpellResult)
       );
     }
     return newText;

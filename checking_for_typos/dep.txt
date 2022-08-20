@@ -1,0 +1,2 @@
+npm i @hapi/hapi @hapi/inert @hapi/vision dotenv hapi-swagger joi
+npm i -D @types/axios @types/hapi @types/hapi__hapi @types/hapi__inert @types/hapi__vision @types/joi @types/node 
