@@ -1,0 +1,43 @@
+export type DataType = "text" | "json" | "file";
+export type ActionType = "__console" | "___return" | "writefile";
+export const headerDataActionTypes = {
+  datatypes: ["text", "json", "file"],
+  actiontypes: ["__console", "___return", "writefile"],
+};
+
+export interface IOptionsProtocolStructure {
+  dataType: DataType;
+  response: boolean;
+  closeConnectiion: boolean;
+  action: ActionType;
+}
+
+export interface IProtocolStructure {
+  header: {
+    readonly title: {
+      name: Buffer;
+      offset: number;
+    };
+    dataType: {
+      typeName: Buffer;
+      offset: number;
+    };
+    action: {
+      typeAction: Buffer;
+      offset: number;
+    };
+    response: boolean;
+    closeConnectiion: boolean;
+  };
+  payload: {
+    data: Buffer;
+  };
+  readonly tail: {
+    name: Buffer;
+    offset: number;
+  };
+}
+
+export interface ICustomProtocol {
+  //   createConnection(host: string, port: number): void;
+}
