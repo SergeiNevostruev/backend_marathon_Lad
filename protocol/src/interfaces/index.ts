@@ -1,3 +1,5 @@
+import { Socket } from "net";
+
 export type DataType = "text" | "json" | "file";
 export type ActionType = "__console" | "___return" | "writefile";
 export const headerDataActionTypes = {
@@ -38,6 +40,20 @@ export interface IProtocolStructure {
   };
 }
 
-export interface ICustomProtocol {
-  //   createConnection(host: string, port: number): void;
+interface ICustomProtocolServerInt {
+  serverActions(
+    action: ActionType,
+    type: DataType,
+    data: Buffer,
+    socket: Socket,
+    fileName: string
+  ): Promise<void>;
+  //
 }
+
+class ICustomProtocolServerStat {
+  static createConnection(host: string, port: number): void {}
+}
+
+export type ICustomProtocolServer = ICustomProtocolServerInt &
+  ICustomProtocolServerStat;

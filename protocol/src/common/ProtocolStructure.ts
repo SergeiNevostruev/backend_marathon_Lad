@@ -1,4 +1,5 @@
 import {
+  ActionType,
   DataType,
   IOptionsProtocolStructure,
   IProtocolStructure,
@@ -66,6 +67,9 @@ export class ProtocolStructure implements IProtocolStructure {
 
   setDataType = (dataType: DataType) => {
     this.header.dataType.typeName = Buffer.alloc(4, dataType);
+  };
+  setActionType = (actionType: ActionType) => {
+    this.header.action.typeAction = Buffer.alloc(9, actionType);
   };
   setResponse = (response: boolean) => {
     this.header.response = response;

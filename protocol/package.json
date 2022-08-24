@@ -4,10 +4,7 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "build": "npx tsc",
-    "start": "ts-node index.ts",
-    "dev": "ts-node-dev --respawn index.ts",
-    "try": "ts-node-dev --respawn bufferTraning.ts",
+    "server": "ts-node-dev --respawn server.ts",
     "client": "ts-node-dev --respawn client.ts"
   },
   "keywords": [],
