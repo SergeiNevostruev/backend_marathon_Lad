@@ -47,7 +47,7 @@ export class ProtocolStructure implements IProtocolStructure {
           this.PROTOCOL_NAME,
           "utf8"
         ),
-        offset: 24,
+        offset: 18,
       },
       dataType: { typeName: Buffer.alloc(4, options.dataType), offset: 4 },
       action: { typeAction: Buffer.alloc(9, options.action), offset: 9 },
