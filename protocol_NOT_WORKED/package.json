@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "server": "ts-node-dev --respawn server.ts",
-    "client": "ts-node-dev --respawn client.ts"
+    "client": "ts-node-dev --respawn client.ts",
+    "train": "ts-node-dev --respawn bufferTraning.ts"
   },
   "keywords": [],
   "author": {

@@ -1,26 +1,50 @@
 export interface IFileStructure {
-  dbFiles: {
-    title: string;
-    dbMap: string;
-    cache: string;
-    collections: {
-      title: string;
-      mapKeys: string;
-      mapValues: string;
-    }[];
+  dbFileSystemStruct: {
+    title: "easydbfiles";
+    databasesMapName: string;
+    dbDirName: "dbFiles";
+    // dbFiles: { //описание структуры папок и файлов, не знаю как описать в классе
+    //   title: string;
+    //   dbMap: string;
+    //   cache: string;
+    //   logfile: string;
+    //   collections: {
+    //     title: string;
+    //     mapKeys: string;
+    //     mapValues: string;
+    //   }[];
+    // }[];
+    dbFiles: string[];
+    lastCode: number;
   };
+  fsDB: IFileSystem;
+  createStructureFS(): Promise<void>;
+  createStructureDB(
+    dbNames: string[],
+    OneEntrySize: number,
+    KeysTypeDB: KeysTypeDB,
+    typeValue?: ValuesTypeDB
+  ): Promise<void>;
 }
 export interface IDataBaseStructure {
   name: string;
   code: number;
   folderDbPath: string;
-  dbMap: IMapDB;
+  expansionFile: ".easydb";
+  // dbMap: IMapDB;
+  OneEntrySize: SizeType; // byte
+  typeValue: ValuesTypeDB;
+  KeysTypeDB: KeysTypeDB;
+  collections: string[];
+  createdDate: string;
+  deleteDate: string;
 }
 export interface ICollectionStructure {
   name: string;
   code: number;
   entities: IEntityStructure["id"][];
   fileCollectionPath: string[];
+  expansionFile: ".edbc"; // easydb collection
   maxSize: number;
   mapKey?: ISearchKeyTree;
   mapValueSearch?: ISearchValueTree;
@@ -44,54 +68,77 @@ export type ReturnMessage = { message: string; done: boolean };
 export type SizeType = number;
 export type OffsetType = number;
 
-export interface IOptionsInit {}
+// export interface IOptionsInit {
+//   OneEntrySize: SizeType; // byte
+// }
 
 export interface IDataBases {
-  init: (options: IOptionsInit) => ReturnMessage;
-  createNewBD: (
+  fstruct: IFileStructure;
+  db: IDataBaseStructure | undefined;
+  initDB(
+    dbName: string
+    // options?: IOptionsInit
+  ): Promise<boolean>;
+  createNewBD(
     dbName: string,
     keyType: KeysTypeDB,
     typeValue?: ValuesTypeDB,
     OneEntrySize?: SizeType
-  ) => ReturnMessage;
-  deleteBD: (dbName: string) => ReturnMessage;
-  deleteBDsoft: (dbName: string) => ReturnMessage;
-  getNamesDB: () => string[];
+  ): Promise<void>;
+  deleteBD(dbName: string): Promise<boolean>;
+  deleteBDsoft(dbName: string): Promise<boolean>;
+  getNamesDB(): Promise<string[] | false>;
+  getNamesDBAllfs(): Promise<string[] | false>;
 }
 
 export interface ICollections {
-  connectCollection: (NameCollection: string) => ICollectionStructure;
-  createCollection: (title: string) => ReturnMessage;
-  deleteCollection: (title: string) => ReturnMessage;
-  deleteCollectionSoft: (title: string) => ReturnMessage;
-  getNamesCollection: () => string[];
-  normalizeKeys: () => ReturnMessage;
+  connectCollection(NameCollection: string): ICollectionStructure;
+  createCollection(title: string): ReturnMessage;
+  deleteCollection(title: string): ReturnMessage;
+  deleteCollectionSoft(title: string): ReturnMessage;
+  getNamesCollection(): string[];
+  normalizeKeys(): ReturnMessage;
 }
 
 export interface IRepository {
-  setValue: (value: IEntityStructure, key?: KeyTypeEntity) => ReturnMessage;
-  changeValue: (key: KeyTypeEntity, value: IEntityStructure) => ReturnMessage;
-  getById: (key: KeyTypeEntity) => IEntityStructure | ReturnMessage;
-  getAll: (
-    offset?: number,
-    limit?: number
-  ) => IEntityStructure[] | ReturnMessage;
-  findByValue: (findWord: string) => IEntityStructure[] | ReturnMessage;
-  deleteByKey: (key: KeyTypeEntity) => ReturnMessage;
-  deleteByKeySoft: (key: KeyTypeEntity) => ReturnMessage;
+  setValue(value: IEntityStructure, key?: KeyTypeEntity): ReturnMessage;
+  changeValue(key: KeyTypeEntity, value: IEntityStructure): ReturnMessage;
+  getById(key: KeyTypeEntity): IEntityStructure | ReturnMessage;
+  getAll(offset?: number, limit?: number): IEntityStructure[] | ReturnMessage;
+  findByValue(findWord: string): IEntityStructure[] | ReturnMessage;
+  deleteByKey(key: KeyTypeEntity): ReturnMessage;
+  deleteByKeySoft(key: KeyTypeEntity): ReturnMessage;
 }
 
 export interface IFileSystem {
-  calcOffset: (key: number, lengthOneEntity: number) => number;
-  createDir: (dirName: string) => boolean;
-  createfile: (file: string, dirName?: string) => boolean;
-  addDatatoEnd: (data: Buffer, path: string, size: number) => boolean;
-  readFilePart: (path: string, length: number, offset: OffsetType) => Buffer;
-  writeFilePart: (path: string, length: number, offset: OffsetType) => boolean;
-  deleteFile: (file: string) => ReturnMessage;
-  deleteDir: (dirName: string) => ReturnMessage;
-  deleteFileEnd: (path: string, length: number) => ReturnMessage;
-  normalizeFile: () => ReturnMessage;
+  pathFS: string;
+  calcOffset(key: number, lengthOneEntity: number): number;
+  createDir(dirName: string): Promise<boolean | void>;
+  createFile(
+    file: string,
+    data?: any,
+    dirName?: string
+  ): Promise<boolean | void>;
+  addDatatoEnd(
+    data: Buffer,
+    path: string
+    // size: number
+  ): Promise<boolean | void>;
+  readFilePart(
+    path: string,
+    length: number,
+    offset: OffsetType
+  ): Promise<Buffer>;
+  writeFilePart(
+    path: string,
+    data: Buffer,
+    // length: number,
+    offset: OffsetType
+  ): Promise<boolean>;
+  deleteFile(filePath: string): Promise<boolean>;
+  deleteDir(dirPath: string): Promise<boolean>;
+  deleteFileEnd(path: string, length: number): Promise<boolean>;
+  normalizeFile(): Promise<ReturnMessage>;
 }
 
 export interface ISearch {}
@@ -103,19 +150,28 @@ export interface ICache {
   maxSize: number;
   mostUseless: KeyTypeEntityCache;
   cache: Map<KeyTypeEntityCache, ICacheEntityStructure>;
-  makeKeyTypeEntityCache: (
+  pathFile: string;
+  expansionFile: ".edbcam"; // easydb cache Map
+  makeKeyTypeEntityCache(
     nameDB: IDataBaseStructure["code"],
     nameCollection: ICollectionStructure["code"],
     key: IEntityStructure["id"]
-  ) => KeyTypeEntityCache;
-  ejection: () => void;
-  setValue: (key: KeyTypeEntityCache, value: IEntityStructure) => ReturnMessage;
-  getValue: (key: KeyTypeEntityCache) => IEntityStructure[] | ReturnMessage;
-  update: (key: KeyTypeEntityCache, value: IEntityStructure) => ReturnMessage;
-  updateImportance: (key: KeyTypeEntityCache) => void;
-  deleteUseless: (key: KeyTypeEntityCache) => void;
-  writeToFile: (path: string) => void;
-  readFromFile: (path: string) => void;
+  ): KeyTypeEntityCache;
+  ejection(): void;
+  setValue(key: KeyTypeEntityCache, value: IEntityStructure): ReturnMessage;
+  getValue(key: KeyTypeEntityCache): IEntityStructure[] | ReturnMessage;
+  update(key: KeyTypeEntityCache, value: IEntityStructure): ReturnMessage;
+  updateImportance(key: KeyTypeEntityCache): void;
+  deleteUseless(key: KeyTypeEntityCache): void;
+  writeToFile(path: string): void;
+  readFromFile(path: string): void;
+}
+
+export interface IFsDbMap {
+  databasesMap: string[];
+  filePath: string;
+  expansionFile: ".edb.map.json"; // easydb's  Map
+  getAllDbName(): string[];
 }
 
 export interface IMapDB {
@@ -124,18 +180,29 @@ export interface IMapDB {
     ICollectionStructure["fileCollectionPath"]
   >;
   filePath: string;
-  getCollectionPath: (
+  expansionFile: ".edb.map.json"; // easydb Map
+  getCollectionPath(
     nameColl: ICollectionStructure["name"]
-  ) => ICollectionStructure["fileCollectionPath"];
+  ): ICollectionStructure["fileCollectionPath"];
+  getAllDbCollection(): string[];
 }
 
 export interface ISearchKeyTree {
   map: Map<IEntityStructure["id"], OffsetType>;
   filePath: string;
-  getEntityOffset: (id: IEntityStructure["id"]) => OffsetType;
+  expansionFile: ".edbkt"; // easydb key tree
+  getEntityOffset(id: IEntityStructure["id"]): OffsetType;
 }
+
 export interface ISearchValueTree {
   map: any;
   filePath: string;
-  getEntityOffset: (searchWord: string) => OffsetType;
+  expansionFile: ".edbvt"; // easydb value tree
+  getEntityOffset(searchWord: string): OffsetType;
+}
+
+export interface ILogger {
+  loggerFile: string;
+  expansionFile: ".edb.logfile";
+  logger(...data: string[]): void;
 }

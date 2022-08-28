@@ -1,0 +1,9 @@
+{
+  "title": "easydbfiles",
+  "databasesMapName": "databasesMap.json",
+  "dbDirName": "dbFiles",
+  "dbFiles": [
+    "second.easydb"
+  ],
+  "lastCode": 3
+}

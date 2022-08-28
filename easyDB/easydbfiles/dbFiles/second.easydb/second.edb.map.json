@@ -1,0 +1,12 @@
+{
+  "name": "second.easydb",
+  "code": 2,
+  "folderDbPath": "dbFiles\\second.easydb",
+  "expansionFile": ".easydb",
+  "OneEntrySize": 256,
+  "typeValue": "string",
+  "KeysTypeDB": "simple",
+  "collections": [],
+  "createdDate": "Sun Aug 28 2022 21:52:27 GMT+0300 (Москва, стандартное время)",
+  "deleteDate": ""
+}
