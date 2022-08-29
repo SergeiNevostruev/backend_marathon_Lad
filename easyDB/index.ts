@@ -7,6 +7,7 @@
 
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
+import { Collections } from "./src/classes/Collections";
 import { DataBases } from "./src/classes/DataBases";
 import { FileStructure } from "./src/classes/FileStructure";
 import { FileSystemDB } from "./src/classes/FileSystem";
@@ -33,6 +34,14 @@ import { TryCatch } from "./src/decorators";
   const fsDB = new FileSystemDB();
   const fsStruct = new FileStructure(fsDB);
   const db = new DataBases(fsStruct);
+  const collection = new Collections(db);
+  await collection.connectDB("second.easydb");
+  // await collection.createCollection("collection_one");
+  // await collection.createCollection("collection_two");
+  // await collection.deleteCollectionSoft("collection_two");
+  // console.log(await collection.getNamesCollection());
+  // console.log(await collection.getNamesCollectionAll());
+
   //   await fsDB.createDir("collection");
   //   await fsDB.createfile("collection #1.map");
   //   await fsDB.createfile("collection #1.map", "maps");
@@ -64,7 +73,7 @@ import { TryCatch } from "./src/decorators";
   // await fsStruct.createStructureFS();
   // await fsStruct.createStructureDB(["first", "second"]);
   // await db.deleteBDsoft("first");
-  await db.deleteBD("five2");
+  // await db.deleteBD("five2");
   // await db.createNewBD("five2");
   // await db.getNamesDB();
   // await db.getNamesDBAllfs();

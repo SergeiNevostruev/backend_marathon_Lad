@@ -24,7 +24,12 @@ export class DataBases implements IDataBases {
     // options?: IOptionsInit | undefined
   ): Promise<boolean> {
     const mapDbFile = await readFile(
-      join(this.fstruct.fsDB.pathFS, dbName),
+      join(
+        this.fstruct.fsDB.pathFS,
+        "dbFiles",
+        dbName,
+        dbName.split(".")[0] + ".edb.map.json"
+      ),
       "utf8"
     );
     if (mapDbFile) {
@@ -37,7 +42,7 @@ export class DataBases implements IDataBases {
 
   async createNewBD(
     dbName: string,
-    keyType: KeysTypeDB = "string",
+    keyType: KeysTypeDB = "simple",
     typeValue: ValuesTypeDB = "string",
     OneEntrySize: number = 256
   ): Promise<void> {

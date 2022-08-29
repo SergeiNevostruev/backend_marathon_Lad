@@ -1,3 +1,5 @@
+import { DataBases } from "../classes/DataBases";
+
 export interface IFileStructure {
   dbFileSystemStruct: {
     title: "easydbfiles";
@@ -38,16 +40,30 @@ export interface IDataBaseStructure {
   collections: string[];
   createdDate: string;
   deleteDate: string;
+  lastCollCode: number;
 }
 export interface ICollectionStructure {
   name: string;
+  mapColl: string;
   code: number;
-  entities: IEntityStructure["id"][];
-  fileCollectionPath: string[];
+  // entities: IEntityStructure["id"][];
+  fileCollectionPath: string;
   expansionFile: ".edbc"; // easydb collection
   maxSize: number;
-  mapKey?: ISearchKeyTree;
-  mapValueSearch?: ISearchValueTree;
+  mapKeyPath: {
+    title: string;
+    path: string;
+  };
+  mapValueSearchPath: {
+    title: string;
+    path: string;
+  };
+  logfile: {
+    title: string;
+    path: string;
+  };
+  createdDate: string;
+  deleteDate: string;
 }
 export interface IEntityStructure {
   id: KeyTypeEntity;
@@ -92,12 +108,16 @@ export interface IDataBases {
 }
 
 export interface ICollections {
-  connectCollection(NameCollection: string): ICollectionStructure;
-  createCollection(title: string): ReturnMessage;
-  deleteCollection(title: string): ReturnMessage;
-  deleteCollectionSoft(title: string): ReturnMessage;
-  getNamesCollection(): string[];
-  normalizeKeys(): ReturnMessage;
+  db: DataBases;
+  connectDB(dbName: string): Promise<boolean>;
+  connectCollection(
+    NameCollection: string
+  ): Promise<{ collection: ICollectionStructure; pathMap: string }>;
+  createCollection(title: string): Promise<boolean>;
+  deleteCollection(title: string): Promise<boolean>;
+  deleteCollectionSoft(title: string): Promise<boolean>;
+  getNamesCollection(): Promise<string[]>;
+  normalizeKeys(): Promise<boolean>;
 }
 
 export interface IRepository {

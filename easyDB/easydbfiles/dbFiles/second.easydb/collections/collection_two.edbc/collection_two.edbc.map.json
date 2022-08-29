@@ -1,0 +1,22 @@
+{
+  "name": "collection_two",
+  "code": 3,
+  "fileCollectionPath": "dbFiles\\second.easydb\\collections\\collection_two.edbc",
+  "expansionFile": ".edbc",
+  "maxSize": 256,
+  "mapColl": "collection_two.edbc.map.json",
+  "mapKeyPath": {
+    "title": "collection_two.edbkt",
+    "path": "dbFiles\\second.easydb\\collections\\collection_two.edbkt"
+  },
+  "mapValueSearchPath": {
+    "title": "collection_two.edbvt",
+    "path": "dbFiles\\second.easydb\\collections\\collection_two.edbvt"
+  },
+  "logfile": {
+    "title": "collection_two.edb.logfile",
+    "path": "dbFiles\\second.easydb\\collections\\collection_two.edb.logfile"
+  },
+  "createdDate": "Mon Aug 29 2022 22:08:46 GMT+0300 (Москва, стандартное время)",
+  "deleteDate": "Mon Aug 29 2022 22:08:53 GMT+0300 (Москва, стандартное время)"
+}

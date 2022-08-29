@@ -78,6 +78,7 @@ export class FileStructure implements IFileStructure {
       collections: [],
       createdDate: Date().toString(),
       deleteDate: "",
+      lastCollCode: 0,
     };
     await this.fsDB.createDir(dirPathDB).catch();
     let fileName: keyof typeof defaultDbStructFile["files"];
