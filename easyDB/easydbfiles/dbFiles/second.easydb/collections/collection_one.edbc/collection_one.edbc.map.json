@@ -17,6 +17,8 @@
     "title": "collection_one.edb.logfile",
     "path": "dbFiles\\second.easydb\\collections\\collection_one.edb.logfile"
   },
-  "createdDate": "Mon Aug 29 2022 22:08:46 GMT+0300 (Москва, стандартное время)",
-  "deleteDate": ""
+  "createdDate": "Thu Sep 01 2022 22:05:29 GMT+0300 (Москва, стандартное время)",
+  "deleteDate": "",
+  "lastOffset": 525,
+  "empty": []
 }

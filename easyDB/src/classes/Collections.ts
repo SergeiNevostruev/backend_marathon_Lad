@@ -131,18 +131,24 @@ export class Collections implements ICollections {
         join(folderPath, emptyCollection.name + emptyCollection.expansionFile)
       );
       await this.db.fstruct.fsDB.createFile(
-        join(folderPath, emptyCollection.name + emptyCollection.logfile.title)
-      );
-      await this.db.fstruct.fsDB.createFile(
         join(
           folderPath,
-          emptyCollection.name + emptyCollection.mapKeyPath.title
+          emptyCollection.name + emptyCollection.expansionFile,
+          emptyCollection.logfile.title
         )
       );
       await this.db.fstruct.fsDB.createFile(
         join(
           folderPath,
-          emptyCollection.name + emptyCollection.mapValueSearchPath.title
+          emptyCollection.name + emptyCollection.expansionFile,
+          emptyCollection.mapKeyPath.title
+        )
+      );
+      await this.db.fstruct.fsDB.createFile(
+        join(
+          folderPath,
+          emptyCollection.name + emptyCollection.expansionFile,
+          emptyCollection.mapValueSearchPath.title
         )
       );
       await this.changeCollInDbMap(emptyCollection.name, "add");

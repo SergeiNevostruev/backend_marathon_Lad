@@ -11,6 +11,7 @@ import { Collections } from "./src/classes/Collections";
 import { DataBases } from "./src/classes/DataBases";
 import { FileStructure } from "./src/classes/FileStructure";
 import { FileSystemDB } from "./src/classes/FileSystem";
+import { Repository } from "./src/classes/Repository";
 
 import { TryCatch } from "./src/decorators";
 
@@ -35,10 +36,15 @@ import { TryCatch } from "./src/decorators";
   const fsStruct = new FileStructure(fsDB);
   const db = new DataBases(fsStruct);
   const collection = new Collections(db);
-  // await collection.connectDB("second.easydb");
+  await collection.connectDB("second.easydb");
+  const repositoryOne = new Repository(collection);
+  await repositoryOne.initRepository("second.easydb", "collection_one");
+  await repositoryOne.setValue("Тестирование записи значений");
+  console.log(await repositoryOne.getAll());
+
   // await collection.createCollection("collection_one");
   // await collection.createCollection("collection_two");
-  // await collection.deleteCollectionSoft("collection_two");
+  // await collection.deleteCollection("collection_one");
   // console.log(await collection.getNamesCollection());
   // console.log(await collection.getNamesCollectionAll());
 

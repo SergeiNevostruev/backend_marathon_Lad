@@ -11,6 +11,7 @@ import {
   ISearchKeyTree,
   KeysTypeDB,
   KeyTypeEntity,
+  ValuesTypeEntity,
 } from "../interface";
 
 export class Repository implements IRepository {
@@ -25,7 +26,7 @@ export class Repository implements IRepository {
 
   async initRepository(dbName: string, collName: string) {
     const checkDB = await this.collect.db.initDB(dbName);
-    if (checkDB) {
+    if (!checkDB) {
       console.log("Некорректное наименование базы данных");
       return false;
     }
@@ -39,13 +40,16 @@ export class Repository implements IRepository {
     mapKey: "lastOffset" | "empty",
     delEmptyOffset: boolean = false
   ) {
-    if (!this.initCollection) {
+    if (!this.initCollection || !this.collect.db.db) {
       console.log("Не инициализирована коллекция");
       throw new Error("Не инициализирована коллекция");
     }
     const mapCollPath = join(
       this.collect.db.fstruct.fsDB.pathFS,
-      this.initCollection?.mapColl
+      this.collect.db.db.folderDbPath,
+      "collections",
+      this.initCollection.name + this.initCollection.expansionFile,
+      this.initCollection.mapColl
     );
     await access(mapCollPath);
     const oldCollMap = await readFile(mapCollPath, "utf8");
@@ -79,7 +83,10 @@ export class Repository implements IRepository {
       throw new Error("Не инициализирована коллекция");
     const mapCollPath = join(
       this.collect.db.fstruct.fsDB.pathFS,
-      this.initCollection.mapKeyPath.path
+      this.collect.db.db.folderDbPath,
+      "collections",
+      this.initCollection.name + this.initCollection.expansionFile,
+      this.initCollection.mapKeyPath.title
     );
     await access(mapCollPath);
     // const oldKeyMap = await readFile(mapCollPath, "utf8");
@@ -103,7 +110,10 @@ export class Repository implements IRepository {
       throw new Error("Не инициализирована коллекция");
     const mapCollPath = join(
       this.collect.db.fstruct.fsDB.pathFS,
-      this.initCollection.mapKeyPath.path
+      this.collect.db.db.folderDbPath,
+      "collections",
+      this.initCollection.name + this.initCollection.expansionFile,
+      this.initCollection.mapKeyPath.title
     );
     await access(mapCollPath);
     const oldKeyMap = await readFile(mapCollPath, "utf8");
@@ -131,7 +141,7 @@ export class Repository implements IRepository {
   }
 
   private convectToBuffer(
-    value: IEntityStructure,
+    value: ValuesTypeEntity,
     changeDate?: number,
     delDate?: number
   ): {
@@ -144,7 +154,7 @@ export class Repository implements IRepository {
     const { maxSize, lastOffset } = this.initCollection;
     const code = Buffer.alloc(1, this.codeType[this.collect.db.db.typeValue]);
     const data = Buffer.alloc(maxSize);
-    data.write(value.value);
+    data.write(value);
     const seconds = Math.floor(Date.now() / 1000);
     const secondsChange = changeDate ? Math.floor(changeDate / 1000) : seconds;
     const createTimeBuffer = Buffer.alloc(4, 0x00);
@@ -192,7 +202,7 @@ export class Repository implements IRepository {
     "Проблемы с инициализацией или использованы не реализованные функции"
   )
   async setValue(
-    value: IEntityStructure,
+    value: ValuesTypeEntity,
     key?: KeyTypeEntity | undefined
   ): Promise<boolean> {
     let newKey: number;
@@ -204,26 +214,32 @@ export class Repository implements IRepository {
     if (!this.initCollection) throw new Error("Не инициализирована коллекция");
     if (!this.collect.db.db) throw new Error("Не инициализирована база данных");
     const { dataArr, size, maxSize } = this.convectToBuffer(value);
+    const filePath = join(
+      this.collect.db.fstruct.fsDB.pathFS,
+      this.initCollection.fileCollectionPath,
+      this.initCollection.name + this.initCollection.expansionFile
+    );
+
     const res = await this.collect.db.fstruct.fsDB.addDatatoEnd(
       dataArr,
-      join(
-        this.collect.db.fstruct.fsDB.pathFS,
-        this.initCollection.fileCollectionPath
-      )
+      filePath
     );
-    await this.writeCollMap(maxSize + size, "lastOffset");
-    await this.writeKeyMap(newKey);
-    await this.initRepository(
-      this.collect.db.db.name,
-      this.initCollection.name
-    );
+    if (res) {
+      await this.writeCollMap(maxSize + size, "lastOffset");
+      await this.writeKeyMap(newKey);
+      await this.initRepository(
+        this.collect.db.db.name,
+        this.initCollection.name
+      );
+    }
+
     return !!res;
   }
 
   @TryCatch("Проблемы с инициализацией")
   async changeValue(
     key: KeyTypeEntity,
-    value: IEntityStructure
+    value: ValuesTypeEntity
   ): Promise<boolean> {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
@@ -306,16 +322,8 @@ export class Repository implements IRepository {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     if (!(await this.checkKey(key))) return false;
-    const value: IEntityStructure = {
-      code: 0,
-      value: "",
-      filePath: "",
-      createDate: 0,
-      changeDate: 0,
-      deleteDate: Date.now(),
-    };
     const offset = this.getOffsetForKey(this.collect.db.db.KeysTypeDB, key);
-    const { dataArr, size, maxSize } = this.convectToBuffer(value, Date.now());
+    const { dataArr, size, maxSize } = this.convectToBuffer("", Date.now());
     await this.collect.db.fstruct.fsDB.writeFilePart(
       join(
         this.collect.db.fstruct.fsDB.pathFS,
@@ -342,7 +350,7 @@ export class Repository implements IRepository {
     if (!value) return false;
     const offset = this.getOffsetForKey(this.collect.db.db.KeysTypeDB, key);
     const { dataArr, size, maxSize } = this.convectToBuffer(
-      value,
+      value.value,
       Date.now(),
       Date.now()
     );
