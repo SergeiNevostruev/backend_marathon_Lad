@@ -5,17 +5,6 @@ export interface IFileStructure {
     title: "easydbfiles";
     databasesMapName: string;
     dbDirName: "dbFiles";
-    // dbFiles: { //описание структуры папок и файлов, не знаю как описать в классе
-    //   title: string;
-    //   dbMap: string;
-    //   cache: string;
-    //   logfile: string;
-    //   collections: {
-    //     title: string;
-    //     mapKeys: string;
-    //     mapValues: string;
-    //   }[];
-    // }[];
     dbFiles: string[];
     lastCode: number;
   };
@@ -49,7 +38,7 @@ export interface ICollectionStructure {
   // entities: IEntityStructure["id"][];
   fileCollectionPath: string;
   expansionFile: ".edbc"; // easydb collection
-  maxSize: number;
+  maxSize: number; // + 13 byte info
   mapKeyPath: {
     title: string;
     path: string;
@@ -64,19 +53,22 @@ export interface ICollectionStructure {
   };
   createdDate: string;
   deleteDate: string;
+  lastOffset: number;
+  empty: number[];
 }
 export interface IEntityStructure {
-  id: KeyTypeEntity;
+  code: number; // typeOf data 0x01 --> string
+  // id: KeyTypeEntity;
   value: ValuesTypeEntity;
-  filePath?: string;
+  filePath: string;
   // metadata
-  createDate: Date;
-  changeDate: Date;
-  deleteDate?: Date | null;
+  createDate: number;
+  changeDate: number;
+  deleteDate: number;
 }
 
 export type ValuesTypeDB = "string" | "file" | "mix";
-export type ValuesTypeEntity = number | string;
+export type ValuesTypeEntity = string;
 export type KeysTypeDB = "simple" | "any-number" | "string";
 export type KeyTypeEntity = number | string;
 export type KeyTypeEntityCache = string;
@@ -121,13 +113,17 @@ export interface ICollections {
 }
 
 export interface IRepository {
-  setValue(value: IEntityStructure, key?: KeyTypeEntity): ReturnMessage;
-  changeValue(key: KeyTypeEntity, value: IEntityStructure): ReturnMessage;
-  getById(key: KeyTypeEntity): IEntityStructure | ReturnMessage;
-  getAll(offset?: number, limit?: number): IEntityStructure[] | ReturnMessage;
-  findByValue(findWord: string): IEntityStructure[] | ReturnMessage;
-  deleteByKey(key: KeyTypeEntity): ReturnMessage;
-  deleteByKeySoft(key: KeyTypeEntity): ReturnMessage;
+  collect: ICollections;
+  setValue(value: IEntityStructure, key?: KeyTypeEntity): Promise<boolean>;
+  changeValue(key: KeyTypeEntity, value: IEntityStructure): Promise<boolean>;
+  getById(key: KeyTypeEntity): Promise<IEntityStructure | false>;
+  getAll(
+    limit?: number
+    // ,offset?: number,
+  ): Promise<IEntityStructure[]>;
+  findByValue(findWord: string): Promise<IEntityStructure[]>;
+  deleteByKey(key: KeyTypeEntity): Promise<boolean>;
+  deleteByKeySoft(key: KeyTypeEntity): Promise<boolean>;
 }
 
 export interface IFileSystem {
@@ -175,7 +171,7 @@ export interface ICache {
   makeKeyTypeEntityCache(
     nameDB: IDataBaseStructure["code"],
     nameCollection: ICollectionStructure["code"],
-    key: IEntityStructure["id"]
+    key: KeyTypeEntity
   ): KeyTypeEntityCache;
   ejection(): void;
   setValue(key: KeyTypeEntityCache, value: IEntityStructure): ReturnMessage;
@@ -208,10 +204,13 @@ export interface IMapDB {
 }
 
 export interface ISearchKeyTree {
-  map: Map<IEntityStructure["id"], OffsetType>;
-  filePath: string;
-  expansionFile: ".edbkt"; // easydb key tree
-  getEntityOffset(id: IEntityStructure["id"]): OffsetType;
+  // map: Map<KeyTypeEntity, OffsetType>;
+  // filePath: string;
+  // expansionFile: ".edbkt"; // easydb key tree
+  // getEntityOffset(id: KeyTypeEntity): OffsetType;
+  type: KeysTypeDB;
+  lastKey: number;
+  keyMap: any;
 }
 
 export interface ISearchValueTree {

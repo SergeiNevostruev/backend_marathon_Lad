@@ -38,13 +38,13 @@ export class Collections implements ICollections {
   }
 
   @TryCatch("Проблемы с проверкой карты базы данных")
-  private async chechTitleColl(collection: string) {
+  private async checkTitleColl(collection: string) {
     const mapDbPath = join(
       this.db.fstruct.fsDB.pathFS,
       this.db.db!.folderDbPath,
       this.db.db!.name.split(".")[0] + ".edb.map.json"
     );
-    access(mapDbPath);
+    await access(mapDbPath);
     const oldDbMap = await readFile(mapDbPath, "utf8");
     const oldDbMapJson = JSON.parse(oldDbMap) as IDataBaseStructure;
     return oldDbMapJson.collections.includes(collection);
@@ -74,7 +74,7 @@ export class Collections implements ICollections {
 
   @TryCatch("Невозможно создать коллекцию")
   async createCollection(title: string): Promise<boolean> {
-    if (await this.chechTitleColl(title)) {
+    if (await this.checkTitleColl(title)) {
       console.log("такое наименование колелкции уже существует");
       return false;
     }
@@ -119,6 +119,8 @@ export class Collections implements ICollections {
         },
         createdDate: Date().toString(),
         deleteDate: "",
+        lastOffset: 0,
+        empty: [],
       };
       await this.db.fstruct.fsDB.createDir(folderPath);
       await this.db.fstruct.fsDB.createFile(
