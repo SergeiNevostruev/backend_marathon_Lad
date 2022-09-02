@@ -39,8 +39,13 @@ import { TryCatch } from "./src/decorators";
   await collection.connectDB("second.easydb");
   const repositoryOne = new Repository(collection);
   await repositoryOne.initRepository("second.easydb", "collection_one");
-  await repositoryOne.setValue("Тестирование записи значений");
-  console.log(await repositoryOne.getAll());
+  // await repositoryOne.setValue("Тестирование записи значений_1");
+  // await repositoryOne.setValue("Тестирование записи значений_2");
+  // await repositoryOne.setValue("Тестирование записи значений_3");
+  // console.log(await repositoryOne.getById(3));
+  // repositoryOne.deleteByKeySoft(2);
+  // repositoryOne.changeValue(0, "Замена значений");
+  console.log(await repositoryOne.findByValue("зна"));
 
   // await collection.createCollection("collection_one");
   // await collection.createCollection("collection_two");

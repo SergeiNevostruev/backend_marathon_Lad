@@ -65,6 +65,7 @@ export interface IEntityStructure {
   createDate: number;
   changeDate: number;
   deleteDate: number;
+  key: number;
 }
 
 export type ValuesTypeDB = "string" | "file" | "mix";

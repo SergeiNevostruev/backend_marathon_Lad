@@ -21,7 +21,7 @@ export class Repository implements IRepository {
     file: 0x02,
     mix: 0x03,
   };
-  public addByte = 13;
+  public addByte = 17;
   constructor(public collect: ICollections) {}
 
   async initRepository(dbName: string, collName: string) {
@@ -69,10 +69,13 @@ export class Repository implements IRepository {
   }
 
   @TryCatch("Проблемы с инициализацией")
-  private getOffsetForKey(KeysTypeDB: KeysTypeDB, key: KeyTypeEntity): number {
+  private async getOffsetForKey(
+    KeysTypeDB: KeysTypeDB,
+    key: KeyTypeEntity
+  ): Promise<number> {
     if (!this.initCollection) throw new Error("Не инициализирована коллекция");
     if (KeysTypeDB === "simple" && typeof key === "number") {
-      return key * (this.initCollection.maxSize + this.addByte);
+      return +key * (+this.initCollection.maxSize + +this.addByte);
     }
     throw new Error("Остальные типы ключей не реализованы");
   } // offset
@@ -131,7 +134,10 @@ export class Repository implements IRepository {
     }
     const mapCollPath = join(
       this.collect.db.fstruct.fsDB.pathFS,
-      this.initCollection.mapKeyPath.path
+      this.collect.db.db.folderDbPath,
+      "collections",
+      this.initCollection.name + this.initCollection.expansionFile,
+      this.initCollection.mapKeyPath.title
     );
     await access(mapCollPath);
     const oldKeyMap = await readFile(mapCollPath, "utf8");
@@ -141,6 +147,7 @@ export class Repository implements IRepository {
   }
 
   private convectToBuffer(
+    id: number,
     value: ValuesTypeEntity,
     changeDate?: number,
     delDate?: number
@@ -160,8 +167,10 @@ export class Repository implements IRepository {
     const createTimeBuffer = Buffer.alloc(4, 0x00);
     const changeTimeBuffer = Buffer.alloc(4, 0x00);
     const delTimeBuffer = Buffer.alloc(4, 0x00);
+    const key = Buffer.alloc(4, 0x00);
     createTimeBuffer.writeUInt32BE(seconds, 0);
     changeTimeBuffer.writeUInt32BE(secondsChange, 0);
+    key.writeUInt32BE(id, 0);
     if (!!delDate) {
       const secondsDel = Math.floor(delDate / 1000);
       delTimeBuffer.writeUInt32BE(secondsDel, 0);
@@ -172,6 +181,7 @@ export class Repository implements IRepository {
       createTimeBuffer,
       changeTimeBuffer,
       delTimeBuffer,
+      key,
     ];
     const dataArr = Buffer.concat(arrBuffer);
     const size = dataArr.byteLength; // полная длина буффера вместе с метками
@@ -188,12 +198,16 @@ export class Repository implements IRepository {
       throw new Error("Функция других типов, кроме string, не реализована");
     }
     const result: IEntityStructure = {
-      code: +data.subarray(0, 1).readUInt32BE(0).toString(16),
-      value: data.subarray(1, 257).toString(),
+      code: data.subarray(0, 1).readIntBE(0, 1),
+      value: data
+        .subarray(1, 257)
+        .subarray(0, data.indexOf(0x00) - 1)
+        .toString(),
       filePath: "", // не реализовано
       createDate: data.subarray(257, 261).readUint32BE(),
       changeDate: data.subarray(261, 265).readUint32BE(),
-      deleteDate: data.subarray(265).readUint32BE(),
+      deleteDate: data.subarray(265, 269).readUint32BE(),
+      key: data.subarray(269).readUint32BE(),
     };
     return result;
   }
@@ -213,7 +227,7 @@ export class Repository implements IRepository {
     }
     if (!this.initCollection) throw new Error("Не инициализирована коллекция");
     if (!this.collect.db.db) throw new Error("Не инициализирована база данных");
-    const { dataArr, size, maxSize } = this.convectToBuffer(value);
+    const { dataArr, size, maxSize } = this.convectToBuffer(newKey, value);
     const filePath = join(
       this.collect.db.fstruct.fsDB.pathFS,
       this.initCollection.fileCollectionPath,
@@ -244,20 +258,26 @@ export class Repository implements IRepository {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     if (!(await this.checkKey(key))) return false;
-    const { dataArr, size, maxSize } = this.convectToBuffer(value, Date.now());
-    await this.collect.db.fstruct.fsDB.writeFilePart(
-      join(
-        this.collect.db.fstruct.fsDB.pathFS,
-        this.initCollection.fileCollectionPath
-      ),
-      dataArr,
-      this.initCollection.lastOffset
+    const { dataArr, size, maxSize } = this.convectToBuffer(
+      key as number,
+      value,
+      Date.now()
     );
-    await this.writeCollMap(
-      this.getOffsetForKey(this.collect.db.db.KeysTypeDB, key),
-      "empty",
-      true
+    console.log(dataArr);
+
+    const pathFile = join(
+      this.collect.db.fstruct.fsDB.pathFS,
+      this.initCollection.fileCollectionPath,
+      this.initCollection.name + this.initCollection.expansionFile
     );
+    const offset = await this.getOffsetForKey(
+      this.collect.db.db.KeysTypeDB,
+      key
+    );
+    console.log(offset);
+
+    await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
+    await this.writeCollMap(offset, "empty", true);
     return true;
   }
 
@@ -265,9 +285,18 @@ export class Repository implements IRepository {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     if (!(await this.checkKey(key))) return false;
-    const offSet = this.getOffsetForKey(this.collect.db.db.KeysTypeDB, key);
-    const dataBuf = await this.collect.db.fstruct.fsDB.readFilePart(
+    const offSet = await this.getOffsetForKey(
+      this.collect.db.db.KeysTypeDB,
+      key
+    );
+    const pathFile = join(
+      this.collect.db.fstruct.fsDB.pathFS,
       this.initCollection.fileCollectionPath,
+      this.initCollection.name + this.initCollection.expansionFile
+    );
+
+    const dataBuf = await this.collect.db.fstruct.fsDB.readFilePart(
+      pathFile,
       this.initCollection.maxSize + this.addByte,
       offSet
     );
@@ -283,7 +312,12 @@ export class Repository implements IRepository {
   ): Promise<IEntityStructure[]> {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
-    const file = await open(this.initCollection.fileCollectionPath);
+    const pathFile = join(
+      this.collect.db.fstruct.fsDB.pathFS,
+      this.initCollection.fileCollectionPath,
+      this.initCollection.name + this.initCollection.expansionFile
+    );
+    const file = await open(pathFile);
     const stream = file.createReadStream({
       highWaterMark: this.initCollection.maxSize + this.addByte,
     });
@@ -322,20 +356,23 @@ export class Repository implements IRepository {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     if (!(await this.checkKey(key))) return false;
-    const offset = this.getOffsetForKey(this.collect.db.db.KeysTypeDB, key);
-    const { dataArr, size, maxSize } = this.convectToBuffer("", Date.now());
-    await this.collect.db.fstruct.fsDB.writeFilePart(
-      join(
-        this.collect.db.fstruct.fsDB.pathFS,
-        this.initCollection.fileCollectionPath
-      ),
-      dataArr,
-      offset
+    const offset = await this.getOffsetForKey(
+      this.collect.db.db.KeysTypeDB,
+      key
     );
-    await this.writeCollMap(
-      this.getOffsetForKey(this.collect.db.db.KeysTypeDB, key),
-      "empty"
+    const pathFile = join(
+      this.collect.db.fstruct.fsDB.pathFS,
+      this.initCollection.fileCollectionPath,
+      this.initCollection.name + this.initCollection.expansionFile
     );
+    const { dataArr, size, maxSize } = this.convectToBuffer(
+      key as number,
+      "",
+      Date.now(),
+      Date.now()
+    );
+    await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
+    await this.writeCollMap(offset, "empty");
     await this.initRepository(
       this.collect.db.db.name,
       this.initCollection.name
@@ -348,20 +385,22 @@ export class Repository implements IRepository {
 
     const value = await this.getById(key);
     if (!value) return false;
-    const offset = this.getOffsetForKey(this.collect.db.db.KeysTypeDB, key);
+    const offset = await this.getOffsetForKey(
+      this.collect.db.db.KeysTypeDB,
+      key
+    );
+    const pathFile = join(
+      this.collect.db.fstruct.fsDB.pathFS,
+      this.initCollection.fileCollectionPath,
+      this.initCollection.name + this.initCollection.expansionFile
+    );
     const { dataArr, size, maxSize } = this.convectToBuffer(
+      key as number,
       value.value,
       Date.now(),
       Date.now()
     );
-    await this.collect.db.fstruct.fsDB.writeFilePart(
-      join(
-        this.collect.db.fstruct.fsDB.pathFS,
-        this.initCollection.fileCollectionPath
-      ),
-      dataArr,
-      offset
-    );
+    await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
     return true;
   }
 }
