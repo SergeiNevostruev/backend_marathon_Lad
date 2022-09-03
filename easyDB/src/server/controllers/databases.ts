@@ -9,36 +9,36 @@ export const db = new DataBases(fsStruct);
 
 const create: Hapi.Lifecycle.Method = async (request, h) => {
   const { payload } = request;
-  const { dbname, oneEntrySize } = payload as {
-    dbname: string;
+  const { dbName, oneEntrySize } = payload as {
+    dbName: string;
     oneEntrySize: number;
   };
-  if (await db.initDB(dbname))
+  if (await db.initDB(dbName))
     return { message: "такая база данных уже существует", done: false };
-  await db.createNewBD(dbname, "simple", "string", oneEntrySize);
+  await db.createNewBD(dbName, "simple", "string", oneEntrySize);
 
-  return { message: `${dbname} создана`, done: true };
+  return { message: `${dbName} создана`, done: true };
 };
 
 const deleteDB: Hapi.Lifecycle.Method = async (request, h) => {
   const { payload } = request;
-  const { dbname } = payload as {
-    dbname: string;
+  const { dbName } = payload as {
+    dbName: string;
   };
-  if (!(await db.initDB(dbname)))
+  if (!(await db.initDB(dbName)))
     return { message: "такой базы данных не существует", done: false };
-  const result = await db.deleteBD(dbname);
+  const result = await db.deleteBD(dbName);
   return result;
 };
 
 const deleteDBSoft: Hapi.Lifecycle.Method = async (request, h) => {
   const { payload } = request;
-  const { dbname } = payload as {
-    dbname: string;
+  const { dbName } = payload as {
+    dbName: string;
   };
-  if (!(await db.initDB(dbname)))
+  if (!(await db.initDB(dbName)))
     return { message: "такой базы данных не существует", done: false };
-  const result = await db.deleteBDsoft(dbname);
+  const result = await db.deleteBDsoft(dbName);
   return result;
 };
 

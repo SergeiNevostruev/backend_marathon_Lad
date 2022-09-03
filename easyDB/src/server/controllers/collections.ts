@@ -58,10 +58,10 @@ const deleteColletctions: Hapi.Lifecycle.Method = async (request, h) => {
   const result = await collection.deleteCollection(collName);
   return result
     ? {
-        message: `Коллекция ${collName} удалена из базы данных ${collName} создана`,
+        message: `Коллекция ${collName} удалена из базы данных ${dbName}`,
         done: true,
       }
-    : { message: "Не получилось удалить колелкцию", done: false };
+    : { message: "Не получилось удалить коллекцию", done: false };
 };
 
 const deleteColletctionsSoft: Hapi.Lifecycle.Method = async (request, h) => {

@@ -15,9 +15,9 @@ export const TryCatch = (message: string) =>
       } catch (er) {
         // Просто выводим в консоль, исполнение кода будет продолжено
         console.error(message);
-        // console.error(er); // для отладки
-        // console.log(args); // для отладки
-        // console.log(propertyKey); // для отладки
+        console.error(er); // для отладки
+        console.log(args); // для отладки
+        console.log(propertyKey); // для отладки
         return false;
       }
     };

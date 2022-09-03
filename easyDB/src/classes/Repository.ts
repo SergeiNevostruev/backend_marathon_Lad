@@ -1,3 +1,4 @@
+import { close } from "fs";
 import { access, open, readFile, writeFile } from "fs/promises";
 import { join } from "path";
 import { TryCatch } from "../decorators";
@@ -167,12 +168,18 @@ export class Repository implements IRepository {
     const data = Buffer.alloc(maxSize);
     data.write(value);
     const seconds = !!date?.createDate
-      ? Math.floor(date.createDate / 1000)
+      ? date.createDate
       : Math.floor(Date.now() / 1000);
     const secondsChange = !!date?.changeDate
-      ? Math.floor(date.changeDate / 1000)
+      ? ("" + date.changeDate).length === 10
+        ? date.changeDate
+        : Math.floor(date.changeDate / 1000)
       : seconds;
-    const secondsDel = !!date?.delDate ? Math.floor(date.delDate / 1000) : 0;
+    const secondsDel = !!date?.delDate
+      ? ("" + date.delDate).length === 10
+        ? date.delDate
+        : Math.floor(date.delDate / 1000)
+      : 0;
     const createTimeBuffer = Buffer.alloc(4, 0x00);
     const changeTimeBuffer = Buffer.alloc(4, 0x00);
     const delTimeBuffer = Buffer.alloc(4, 0x00);
@@ -203,17 +210,18 @@ export class Repository implements IRepository {
     if (this.collect.db.db.typeValue !== "string") {
       throw new Error("Функция других типов, кроме string, не реализована");
     }
+    const size = this.initCollection.maxSize;
     const result: IEntityStructure = {
       code: data.subarray(0, 1).readIntBE(0, 1),
       value: data
-        .subarray(1, 257)
+        .subarray(1, size + 1)
         .subarray(0, data.indexOf(0x00) - 1)
         .toString(),
       filePath: "", // не реализовано
-      createDate: data.subarray(257, 261).readUint32BE(),
-      changeDate: data.subarray(261, 265).readUint32BE(),
-      deleteDate: data.subarray(265, 269).readUint32BE(),
-      key: data.subarray(269).readUint32BE(),
+      createDate: data.subarray(size + 1, size + 5).readUint32BE(),
+      changeDate: data.subarray(size + 5, size + 9).readUint32BE(),
+      deleteDate: data.subarray(size + 9, size + 13).readUint32BE(),
+      key: data.subarray(size + 13).readUint32BE(),
     };
     return result;
   }
@@ -342,19 +350,29 @@ export class Repository implements IRepository {
         checkDel = getDel ? true : !value.deleteDate;
         if (!check && checkDel) {
           result.push(value);
-        } else if (check && value.value.includes(check) && checkDel) {
+        } else if (
+          check &&
+          value.value.toLowerCase().includes(check.toLowerCase()) &&
+          checkDel
+        ) {
           result.push(value);
         }
       });
       if (limit && result.length >= limit) stream.emit("end");
-      stream.on("end", () => {
+      stream.on("end", async () => {
+        stream.destroy();
+        await file.close();
         resolve(result);
       });
-      stream.on("error", (err) => {
+      stream.on("error", async (err) => {
+        await stream.destroy();
+        await file.close();
         console.log(err);
         reject([]);
       });
     })) as IEntityStructure[];
+    await stream.destroy();
+    await file.close();
     return endOfStream;
   }
 
@@ -392,7 +410,7 @@ export class Repository implements IRepository {
     await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
     await this.writeCollMap(offset, "empty");
     await this.initRepository(
-      this.collect.db.db.name,
+      this.collect.db.db.name.split(".")[0],
       this.initCollection.name
     );
     return true;

@@ -2,12 +2,12 @@ import Joi from "joi";
 import { db } from "../controllers/databases";
 
 export const schemaDBnameEnterySize = Joi.object({
-  dbname: Joi.string().required().min(3).max(20).example("database_one"),
+  dbName: Joi.string().required().min(3).max(20).example("database_one"),
   oneEntrySize: Joi.number().min(5).max(500).example(256),
 }).label("DB and entry size name for create");
 
 export const schemaDBname = Joi.object({
-  dbname: Joi.string().required().min(3).max(20).example("database_one"),
+  dbName: Joi.string().required().min(3).max(20).example("database_one"),
 }).label("DB name");
 
 export const schemeDBnameCollect = Joi.object({

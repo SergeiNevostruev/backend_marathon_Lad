@@ -10,7 +10,7 @@ const swaggerOptions: HapiSwagger.RegisterOptions = {
   info: {
     title: "EasyBD API Documentation",
     description:
-      "Документация к API базы данных EasyBD. На данный момент реализованы простые автоприсваивающиеся ключи и строковые данные.",
+      "Документация к API базы данных EasyBD. На данный момент реализованы простые автоприсваивающиеся ключи и строковые данные. Возвращаемое время это tamestamp деленный на 1000",
   },
   tags: [
     {

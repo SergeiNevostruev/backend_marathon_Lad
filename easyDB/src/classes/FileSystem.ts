@@ -82,7 +82,8 @@ export class FileSystemDB implements IFileSystem {
           resolve(buffer);
         }
       );
-      close(fdFileBuf.fd);
+      await fdFileBuf.close();
+      // close(fdFileBuf.fd);
     }) as any;
     return await readBufFile;
   }
@@ -96,7 +97,8 @@ export class FileSystemDB implements IFileSystem {
     await access(path);
     const fdFileBuf = await open(path, "r+");
     await fdFileBuf.write(data, 0, data.length, offset);
-    close(fdFileBuf.fd);
+    await fdFileBuf.close();
+    // close(fdFileBuf.fd);
     return true;
   }
 
