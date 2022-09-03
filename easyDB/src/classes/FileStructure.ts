@@ -15,13 +15,6 @@ export class FileStructure implements IFileStructure {
     title: "easydbfiles";
     databasesMapName: string;
     dbDirName: "dbFiles";
-    // dbFiles: {
-    //   title: string;
-    //   dbMap: string;
-    //   cache: string;
-    //   logfile: string;
-    //   collections: { title: string; mapKeys: string; mapValues: string }[];
-    // }[];
     dbFiles: string[];
     lastCode: number;
   };

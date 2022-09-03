@@ -1,0 +1,13 @@
+{
+  "name": "database_one1.easydb",
+  "code": 6,
+  "folderDbPath": "dbFiles\\database_one1.easydb",
+  "expansionFile": ".easydb",
+  "OneEntrySize": 256,
+  "typeValue": "string",
+  "KeysTypeDB": "simple",
+  "collections": [],
+  "createdDate": "Sat Sep 03 2022 11:36:26 GMT+0300 (Москва, стандартное время)",
+  "deleteDate": "",
+  "lastCollCode": 0
+}

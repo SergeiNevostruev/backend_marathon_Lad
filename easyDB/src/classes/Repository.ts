@@ -149,8 +149,11 @@ export class Repository implements IRepository {
   private convectToBuffer(
     id: number,
     value: ValuesTypeEntity,
-    changeDate?: number,
-    delDate?: number
+    date?: {
+      createDate?: number | undefined;
+      changeDate?: number | undefined;
+      delDate?: number | undefined;
+    }
   ): {
     dataArr: Buffer;
     size: number;
@@ -162,19 +165,21 @@ export class Repository implements IRepository {
     const code = Buffer.alloc(1, this.codeType[this.collect.db.db.typeValue]);
     const data = Buffer.alloc(maxSize);
     data.write(value);
-    const seconds = Math.floor(Date.now() / 1000);
-    const secondsChange = changeDate ? Math.floor(changeDate / 1000) : seconds;
+    const seconds = !!date?.createDate
+      ? Math.floor(date.createDate / 1000)
+      : Math.floor(Date.now() / 1000);
+    const secondsChange = !!date?.changeDate
+      ? Math.floor(date.changeDate / 1000)
+      : seconds;
+    const secondsDel = !!date?.delDate ? Math.floor(date.delDate / 1000) : 0;
     const createTimeBuffer = Buffer.alloc(4, 0x00);
     const changeTimeBuffer = Buffer.alloc(4, 0x00);
     const delTimeBuffer = Buffer.alloc(4, 0x00);
     const key = Buffer.alloc(4, 0x00);
+    key.writeUInt32BE(id, 0);
     createTimeBuffer.writeUInt32BE(seconds, 0);
     changeTimeBuffer.writeUInt32BE(secondsChange, 0);
-    key.writeUInt32BE(id, 0);
-    if (!!delDate) {
-      const secondsDel = Math.floor(delDate / 1000);
-      delTimeBuffer.writeUInt32BE(secondsDel, 0);
-    }
+    delTimeBuffer.writeUInt32BE(secondsDel, 0);
     const arrBuffer = [
       code,
       data,
@@ -258,10 +263,14 @@ export class Repository implements IRepository {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     if (!(await this.checkKey(key))) return false;
+    const oldValue = await this.getById(key);
     const { dataArr, size, maxSize } = this.convectToBuffer(
       key as number,
       value,
-      Date.now()
+      {
+        createDate: oldValue ? oldValue.createDate : undefined,
+        changeDate: Date.now(),
+      }
     );
     console.log(dataArr);
 
@@ -306,6 +315,7 @@ export class Repository implements IRepository {
 
   @TryCatch("Невозможно прочитать файл коллекции")
   private async getManyValues(
+    getDel: boolean = false,
     check?: string | false,
     limit?: number | undefined,
     offset?: number | undefined
@@ -322,13 +332,15 @@ export class Repository implements IRepository {
       highWaterMark: this.initCollection.maxSize + this.addByte,
     });
     const result: IEntityStructure[] = [];
+    let checkDel: boolean;
     let value: IEntityStructure;
     const endOfStream = (await new Promise((resolve, reject) => {
       stream.on("data", (chunk: Buffer) => {
         value = this.convectToValue(chunk);
-        if (!check) {
+        checkDel = getDel ? true : !value.deleteDate;
+        if (!check && checkDel) {
           result.push(value);
-        } else if (check && value.value.includes(check)) {
+        } else if (check && value.value.includes(check) && checkDel) {
           result.push(value);
         }
       });
@@ -345,11 +357,15 @@ export class Repository implements IRepository {
   }
 
   async getAll(limit?: number | undefined): Promise<IEntityStructure[]> {
-    return await this.getManyValues(false, limit);
+    return await this.getManyValues(false, false, limit);
+  }
+
+  async getAllandDel(limit?: number | undefined): Promise<IEntityStructure[]> {
+    return await this.getManyValues(true, false, limit);
   }
 
   async findByValue(findWord: string): Promise<IEntityStructure[]> {
-    return await this.getManyValues(findWord);
+    return await this.getManyValues(false, findWord);
   }
 
   async deleteByKey(key: KeyTypeEntity): Promise<boolean> {
@@ -365,12 +381,12 @@ export class Repository implements IRepository {
       this.initCollection.fileCollectionPath,
       this.initCollection.name + this.initCollection.expansionFile
     );
-    const { dataArr, size, maxSize } = this.convectToBuffer(
-      key as number,
-      "",
-      Date.now(),
-      Date.now()
-    );
+    const oldValue = await this.getById(key);
+    const { dataArr, size, maxSize } = this.convectToBuffer(key as number, "", {
+      createDate: oldValue ? oldValue.createDate : undefined,
+      changeDate: oldValue ? oldValue.changeDate : undefined,
+      delDate: Date.now(),
+    });
     await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
     await this.writeCollMap(offset, "empty");
     await this.initRepository(
@@ -383,8 +399,8 @@ export class Repository implements IRepository {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
 
-    const value = await this.getById(key);
-    if (!value) return false;
+    const oldValue = await this.getById(key);
+    if (!oldValue) return false;
     const offset = await this.getOffsetForKey(
       this.collect.db.db.KeysTypeDB,
       key
@@ -396,9 +412,12 @@ export class Repository implements IRepository {
     );
     const { dataArr, size, maxSize } = this.convectToBuffer(
       key as number,
-      value.value,
-      Date.now(),
-      Date.now()
+      oldValue.value,
+      {
+        createDate: oldValue ? oldValue.createDate : undefined,
+        changeDate: oldValue ? oldValue.changeDate : undefined,
+        delDate: Date.now(),
+      }
     );
     await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
     return true;

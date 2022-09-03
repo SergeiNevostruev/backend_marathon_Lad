@@ -3,7 +3,11 @@
   "databasesMapName": "databasesMap.json",
   "dbDirName": "dbFiles",
   "dbFiles": [
-    "second.easydb"
+    "second.easydb",
+    "database_one1.easydb",
+    "database_one2.easydb",
+    "database_one32.easydb",
+    "database_one321.easydb"
   ],
-  "lastCode": 4
+  "lastCode": 10
 }

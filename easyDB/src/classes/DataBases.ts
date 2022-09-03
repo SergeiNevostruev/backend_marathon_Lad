@@ -27,8 +27,8 @@ export class DataBases implements IDataBases {
       join(
         this.fstruct.fsDB.pathFS,
         "dbFiles",
-        dbName,
-        dbName.split(".")[0] + ".edb.map.json"
+        dbName + ".easydb",
+        dbName + ".edb.map.json"
       ),
       "utf8"
     );
@@ -131,8 +131,9 @@ export class DataBases implements IDataBases {
       ),
       "utf8"
     );
-    return (JSON.parse(mapFSFile) as IFileStructure["dbFileSystemStruct"])
-      .dbFiles;
+    return (
+      JSON.parse(mapFSFile) as IFileStructure["dbFileSystemStruct"]
+    ).dbFiles.map((v) => v.split(".")[0]);
   }
 
   @TryCatch("Невозможно считать информацию о базах данных")
@@ -143,7 +144,9 @@ export class DataBases implements IDataBases {
     );
     await access(pathDbDir);
     const files = await readdir(pathDbDir, "utf8");
-    const filesBD = files.filter((v) => v.endsWith(".easydb"));
+    const filesBD = files
+      .filter((v) => v.endsWith(".easydb"))
+      .map((v) => v.split(".")[0]);
     return filesBD;
   }
 }

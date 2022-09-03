@@ -196,7 +196,7 @@ export class Collections implements ICollections {
       console.log("Не инициализирована база данных");
       throw new Error("Не инициализирована база данных");
     }
-    await this.db.initDB(this.db.db.name);
+    await this.db.initDB(this.db.db.name.split(".")[0]);
     return this.db.db.collections;
   }
 
