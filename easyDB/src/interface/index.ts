@@ -115,7 +115,10 @@ export interface ICollections {
 
 export interface IRepository {
   collect: ICollections;
-  setValue(value: ValuesTypeEntity, key?: KeyTypeEntity): Promise<boolean>;
+  setValue(
+    value: ValuesTypeEntity,
+    key?: KeyTypeEntity
+  ): Promise<number | false>;
   changeValue(key: KeyTypeEntity, value: ValuesTypeEntity): Promise<boolean>;
   getById(key: KeyTypeEntity): Promise<IEntityStructure | false>;
   getAll(

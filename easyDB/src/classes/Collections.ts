@@ -64,7 +64,7 @@ export class Collections implements ICollections {
       NameCollection + ".edbc",
       NameCollection + ".edbc.map.json"
     );
-    access(pathToMapDB);
+    // access(pathToMapDB);
     const mapColl = JSON.parse(
       await readFile(pathToMapDB, "utf8")
     ) as ICollectionStructure;
@@ -140,14 +140,14 @@ export class Collections implements ICollections {
       await this.db.fstruct.fsDB.createFile(
         join(
           folderPath,
-          emptyCollection.name + emptyCollection.expansionFile,
+          // emptyCollection.name + emptyCollection.expansionFile,
           emptyCollection.mapKeyPath.title
         )
       );
       await this.db.fstruct.fsDB.createFile(
         join(
           folderPath,
-          emptyCollection.name + emptyCollection.expansionFile,
+          // emptyCollection.name + emptyCollection.expansionFile,
           emptyCollection.mapValueSearchPath.title
         )
       );

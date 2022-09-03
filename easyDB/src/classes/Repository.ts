@@ -32,6 +32,7 @@ export class Repository implements IRepository {
     }
     const checkColl = await this.collect.connectCollection(collName);
     this.initCollection = checkColl.collection;
+    return true;
   }
 
   @TryCatch("Проблемы с проверкой карты коллекция")
@@ -223,7 +224,7 @@ export class Repository implements IRepository {
   async setValue(
     value: ValuesTypeEntity,
     key?: KeyTypeEntity | undefined
-  ): Promise<boolean> {
+  ): Promise<number | false> {
     let newKey: number;
     if (key) {
       throw new Error("Функция кастомных ключей не реализана");
@@ -252,7 +253,7 @@ export class Repository implements IRepository {
       );
     }
 
-    return !!res;
+    return newKey;
   }
 
   @TryCatch("Проблемы с инициализацией")
@@ -327,6 +328,7 @@ export class Repository implements IRepository {
       this.initCollection.fileCollectionPath,
       this.initCollection.name + this.initCollection.expansionFile
     );
+    await access(pathFile);
     const file = await open(pathFile);
     const stream = file.createReadStream({
       highWaterMark: this.initCollection.maxSize + this.addByte,

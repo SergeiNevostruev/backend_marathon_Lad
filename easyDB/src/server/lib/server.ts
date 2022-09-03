@@ -2,8 +2,10 @@ import * as Hapi from "@hapi/hapi";
 import path from "path";
 import dotenv from "dotenv";
 import plugins from "./plugins";
-import testRoute from "../routes/testRoute";
+import dbRoute from "../routes/dbRoute";
 import config from "../config";
+import collRoute from "../routes/collRoute";
+import reposRoute from "../routes/reposRoute";
 // import { pathDir } from "../../../index";
 
 dotenv.config();
@@ -24,7 +26,7 @@ const init = async (): Promise<void> => {
 
   await server.register(plugins);
 
-  server.route([...testRoute]);
+  server.route([...dbRoute, ...collRoute, ...reposRoute]);
 
   await server.start().then(() => {
     console.log(
