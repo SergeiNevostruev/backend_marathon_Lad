@@ -1,13 +1,13 @@
 # Тестовые задание
 
-**_1. BSON_** - выполнено
+**_1. BSON_** - [выполнено](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/bson)
 
 **_2. Чат_** - в работе...
 
-**_3. Проверка текста на опечатки_** - выполнено
+**_3. Проверка текста на опечатки_** - [выполнено](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/checking_for_typos)
 
-**_4. База данных_** - в работе...
+**_4. База данных_** - [в работе...](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/easyDB)
 
 **_5. Хранение файлов_** - в работе...
 
-**_6. Протокол_** - в работе...
+**_6. Протокол_** - в работе... (нужно переписывать полностью, не удачная реализация)
