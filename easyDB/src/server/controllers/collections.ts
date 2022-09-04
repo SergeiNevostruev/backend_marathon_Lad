@@ -40,7 +40,7 @@ const createColletctions: Hapi.Lifecycle.Method = async (request, h) => {
   const result = await collection.createCollection(collName);
   return result
     ? {
-        message: `Коллекция ${collName} в базе данных ${collName} создана`,
+        message: `Коллекция ${collName} в базе данных ${dbName} создана`,
         done: true,
       }
     : { message: "Не получилось создать колелкцию", done: false };

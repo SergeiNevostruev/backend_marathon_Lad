@@ -256,7 +256,7 @@ export class Repository implements IRepository {
       await this.writeCollMap(maxSize + size, "lastOffset");
       await this.writeKeyMap(newKey);
       await this.initRepository(
-        this.collect.db.db.name,
+        this.collect.db.db.name.split(".")[0],
         this.initCollection.name
       );
     }
