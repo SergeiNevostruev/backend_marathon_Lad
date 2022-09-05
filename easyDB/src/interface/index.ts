@@ -68,7 +68,7 @@ export interface IEntityStructure {
   key: number;
 }
 
-export type ValuesTypeDB = "string" | "file" | "mix";
+export type ValuesTypeDB = "string" | "big string" | "file" | "mix";
 export type ValuesTypeEntity = string;
 export type KeysTypeDB = "simple" | "any-number" | "string";
 export type KeyTypeEntity = number | string;
@@ -125,6 +125,8 @@ export interface IRepository {
     limit?: number
     // ,offset?: number,
   ): Promise<IEntityStructure[]>;
+  getAllRange(start: number, end?: number): Promise<IEntityStructure[]>;
+  getAllandDel(limit?: number | undefined): Promise<IEntityStructure[]>;
   findByValue(findWord: string): Promise<IEntityStructure[]>;
   deleteByKey(key: KeyTypeEntity): Promise<boolean>;
   deleteByKeySoft(key: KeyTypeEntity): Promise<boolean>;
@@ -214,6 +216,7 @@ export interface ISearchKeyTree {
   // getEntityOffset(id: KeyTypeEntity): OffsetType;
   type: KeysTypeDB;
   lastKey: number;
+  lastOffset: number;
   keyMap: any;
 }
 

@@ -15,6 +15,13 @@ export const schemeDBnameCollect = Joi.object({
   collName: Joi.string().required().min(3).max(20).example("collection_one"),
 }).label("Collection and db names");
 
+export const schemeDBnameCollectRange = Joi.object({
+  dbName: Joi.string().required().min(3).max(20).example("database_one"),
+  collName: Joi.string().required().min(3).max(20).example("collection_one"),
+  start: Joi.number().required().example(1),
+  enf: Joi.number().required().example(5),
+}).label("Collection and db names, and range");
+
 export const schemeDBnameCollectSearchValue = Joi.object({
   dbName: Joi.string().required().min(3).max(20).example("database_one"),
   collName: Joi.string().required().min(3).max(20).example("collection_one"),

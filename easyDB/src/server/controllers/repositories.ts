@@ -36,6 +36,30 @@ const getAllValuesWithDel: Hapi.Lifecycle.Method = async (request, h) => {
   return repository.getAllandDel();
 };
 
+const getAllValuesRange: Hapi.Lifecycle.Method = async (request, h) => {
+  const { payload } = request;
+  const { dbName, collName, start, end } = payload as {
+    dbName: string;
+    collName: string;
+    start: number;
+    end: number;
+  };
+
+  if (start > end)
+    return {
+      message: "Некорректный диапазон",
+      done: false,
+    };
+
+  const changeDB = await repository.initRepository(dbName, collName);
+  if (!changeDB)
+    return {
+      message: "такой базы данных или коллекции не существует не существует",
+      done: false,
+    };
+  return repository.getAllRange(start, end);
+};
+
 const findByValue: Hapi.Lifecycle.Method = async (request, h) => {
   const { payload } = request;
   const { dbName, collName, find } = payload as {
@@ -153,4 +177,5 @@ export default {
   getById,
   deleteByKey,
   deleteByKeySoft,
+  getAllValuesRange,
 };

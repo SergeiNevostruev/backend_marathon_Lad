@@ -123,6 +123,8 @@ export class Collections implements ICollections {
         empty: [],
       };
       await this.db.fstruct.fsDB.createDir(folderPath);
+      await this.db.fstruct.fsDB.createDir(join(folderPath, "bigstring"));
+      await this.db.fstruct.fsDB.createDir(join(folderPath, "file"));
       await this.db.fstruct.fsDB.createFile(
         join(folderPath, emptyCollection.mapColl),
         JSON.stringify(emptyCollection, null, 2)

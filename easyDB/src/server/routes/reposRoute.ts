@@ -5,6 +5,7 @@ import repositories from "../controllers/repositories";
 import {
   schemeDBnameCollect,
   schemeDBnameCollectKey,
+  schemeDBnameCollectRange,
   schemeDBnameCollectSearchValue,
   schemeDBnameCollectValue,
   schemeDBnameCollectValueKey,
@@ -38,6 +39,19 @@ const reposRoute: Hapi.ServerRoute[] = [
       tags: ["api", "Repository"],
       validate: {
         payload: schemeDBnameCollect,
+      },
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/repository/get-all-values-range",
+    options: {
+      handler: repositories.getAllValuesRange,
+      description: "Get all values in range in collection that database",
+      notes: "Get all values in range in collection that database",
+      tags: ["api", "Repository"],
+      validate: {
+        payload: schemeDBnameCollectRange,
       },
     },
   },

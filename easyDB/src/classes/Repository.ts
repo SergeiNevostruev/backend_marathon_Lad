@@ -1,5 +1,6 @@
 import { close } from "fs";
 import { access, open, readFile, writeFile } from "fs/promises";
+import { number } from "joi";
 import { join } from "path";
 import { TryCatch } from "../decorators";
 import {
@@ -12,6 +13,7 @@ import {
   ISearchKeyTree,
   KeysTypeDB,
   KeyTypeEntity,
+  ValuesTypeDB,
   ValuesTypeEntity,
 } from "../interface";
 
@@ -19,8 +21,9 @@ export class Repository implements IRepository {
   public initCollection: ICollectionStructure | undefined;
   public codeType = {
     string: 0x01,
-    file: 0x02,
-    mix: 0x03,
+    "big string": 0x02,
+    file: 0x03,
+    mix: 0x04,
   };
   public addByte = 17;
   constructor(public collect: ICollections) {}
@@ -79,11 +82,32 @@ export class Repository implements IRepository {
     if (KeysTypeDB === "simple" && typeof key === "number") {
       return +key * (+this.initCollection.maxSize + +this.addByte);
     }
+    if (KeysTypeDB === "any-number" && typeof key === "number") {
+      if (!this.collect.db.db)
+        throw new Error("Не инициализирована база данных");
+      const mapCollPath = join(
+        this.collect.db.fstruct.fsDB.pathFS,
+        this.collect.db.db.folderDbPath,
+        "collections",
+        this.initCollection.name + this.initCollection.expansionFile,
+        this.initCollection.mapKeyPath.title
+      );
+      await access(mapCollPath);
+      const oldKeyMap = await readFile(mapCollPath, "utf8");
+      const oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
+      return (
+        oldKeyMapJson.keyMap[key] *
+        (+this.initCollection.maxSize + +this.addByte)
+      );
+    }
     throw new Error("Остальные типы ключей не реализованы");
   } // offset
 
   @TryCatch("Проблемы с инициализацией")
-  private async writeKeyMap(key: KeyTypeEntity): Promise<ISearchKeyTree> {
+  private async writeKeyMap(
+    key: KeyTypeEntity,
+    length?: number
+  ): Promise<ISearchKeyTree> {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     const mapCollPath = join(
@@ -94,15 +118,44 @@ export class Repository implements IRepository {
       this.initCollection.mapKeyPath.title
     );
     await access(mapCollPath);
-    // const oldKeyMap = await readFile(mapCollPath, "utf8");
-    // const oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
     if (this.collect.db.db.KeysTypeDB === "simple" && typeof key === "number") {
       let keyMap: ISearchKeyTree;
       keyMap = {
         type: this.collect.db.db.KeysTypeDB,
         lastKey: key,
+        lastOffset: await this.getOffsetForKey("simple", key),
         keyMap: {},
       };
+      writeFile(mapCollPath, JSON.stringify(keyMap, null, 2));
+      return keyMap;
+    }
+    if (
+      this.collect.db.db.KeysTypeDB === "any-number" &&
+      typeof key === "number" &&
+      length
+    ) {
+      let keyMap: ISearchKeyTree;
+      keyMap = {
+        type: this.collect.db.db.KeysTypeDB,
+        lastKey: 0,
+        lastOffset: 0,
+        keyMap: {},
+      };
+      const oldKeyMap = await readFile(mapCollPath, "utf8");
+      let oldKeyMapJson: ISearchKeyTree;
+      if (!oldKeyMap) {
+        oldKeyMapJson = keyMap;
+      } else {
+        oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
+      }
+      const lastOffsetOldMap = oldKeyMapJson.lastOffset;
+      const lastKeyNewMap = oldKeyMapJson.lastKey + 1;
+      oldKeyMapJson.keyMap[key] = lastKeyNewMap;
+      oldKeyMapJson.lastOffset =
+        lastOffsetOldMap + this.collect.db.db.OneEntrySize;
+      oldKeyMapJson.lastKey = lastKeyNewMap;
+      oldKeyMapJson.type = this.collect.db.db.KeysTypeDB;
+
       writeFile(mapCollPath, JSON.stringify(keyMap, null, 2));
       return keyMap;
     }
@@ -131,21 +184,74 @@ export class Repository implements IRepository {
   private async checkKey(key: KeyTypeEntity): Promise<boolean> {
     if (!this.initCollection || !this.collect.db.db || typeof key !== "number")
       throw new Error("Не инициализирована коллекция");
-    if (this.collect.db.db.KeysTypeDB !== "simple") {
+    if (this.collect.db.db.KeysTypeDB === "simple") {
+      const mapCollPath = join(
+        this.collect.db.fstruct.fsDB.pathFS,
+        this.collect.db.db.folderDbPath,
+        "collections",
+        this.initCollection.name + this.initCollection.expansionFile,
+        this.initCollection.mapKeyPath.title
+      );
+      await access(mapCollPath);
+      const oldKeyMap = await readFile(mapCollPath, "utf8");
+      if (!oldKeyMap) return false;
+      const oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
+      return key >= 0 && key <= +oldKeyMapJson.lastKey;
+    } else if (this.collect.db.db.KeysTypeDB === "any-number") {
+      throw new Error("Функция кастомных ключей не реализана");
+    } else {
       throw new Error("Функция кастомных ключей не реализана");
     }
-    const mapCollPath = join(
+  }
+
+  private async setFile() {}
+  private async getFile() {}
+
+  @TryCatch("Проблемы с записью Big string файла")
+  private async setBigString(data: Buffer, path: string) {
+    if (!this.initCollection) throw new Error("Не инициализирована коллекция");
+    if (!this.collect.db.db) throw new Error("Не инициализирована база данных");
+    const folderPath = join(
       this.collect.db.fstruct.fsDB.pathFS,
       this.collect.db.db.folderDbPath,
       "collections",
       this.initCollection.name + this.initCollection.expansionFile,
-      this.initCollection.mapKeyPath.title
+      "bigstring"
     );
-    await access(mapCollPath);
-    const oldKeyMap = await readFile(mapCollPath, "utf8");
-    if (!oldKeyMap) return false;
-    const oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
-    return key >= 0 && key <= +oldKeyMapJson.lastKey;
+    await access(folderPath);
+    await writeFile(path, data);
+    return true;
+  }
+
+  @TryCatch("Проблемы с чтением Big string файла")
+  private async getBigString(
+    pathFile: string,
+    valueSize: number
+  ): Promise<IEntityStructure | false> {
+    await access(pathFile);
+    const data = await readFile(pathFile);
+    const convectValue = this.convectToValue(data, valueSize);
+    return convectValue;
+  }
+
+  private concatBigStringBuffer(
+    value: string,
+    info: {
+      code: Buffer;
+      createTimeBuffer: Buffer;
+      changeTimeBuffer: Buffer;
+      delTimeBuffer: Buffer;
+      key: Buffer;
+    }
+  ) {
+    return Buffer.concat([
+      info.code,
+      Buffer.from(value),
+      info.createTimeBuffer,
+      info.changeTimeBuffer,
+      info.delTimeBuffer,
+      info.key,
+    ]);
   }
 
   private convectToBuffer(
@@ -155,18 +261,51 @@ export class Repository implements IRepository {
       createDate?: number | undefined;
       changeDate?: number | undefined;
       delDate?: number | undefined;
-    }
+    },
+    fileType?: boolean
   ): {
     dataArr: Buffer;
     size: number;
     maxSize: number;
+    getCode?: ValuesTypeDB;
+    path?: string;
+    info?: {
+      code: Buffer;
+      createTimeBuffer: Buffer;
+      changeTimeBuffer: Buffer;
+      delTimeBuffer: Buffer;
+      key: Buffer;
+    };
+    valueSize?: number;
   } {
     if (!this.initCollection) throw new Error("Не инициализирована коллекция");
     if (!this.collect.db.db) throw new Error("Не инициализирована база данных");
     const { maxSize, lastOffset } = this.initCollection;
-    const code = Buffer.alloc(1, this.codeType[this.collect.db.db.typeValue]);
+    let getCode: ValuesTypeDB;
     const data = Buffer.alloc(maxSize);
-    data.write(value);
+    let bigStringPath: string = "";
+    const valueSize = Buffer.byteLength(value, "utf8");
+    if (valueSize > maxSize) {
+      getCode = "big string";
+      bigStringPath = join(
+        this.collect.db.fstruct.fsDB.pathFS,
+        this.collect.db.db.folderDbPath,
+        "collections",
+        this.initCollection.name + this.initCollection.expansionFile,
+        "bigstring",
+        "" + id
+      );
+      const bigString = JSON.stringify({
+        valuePart: value.slice(0, 10) + "...",
+        filePath: bigStringPath,
+        valueSize,
+      });
+      data.write(bigString); // дописать запись в другой файл
+    } else {
+      getCode = !fileType ? "string" : "file";
+      data.write(value);
+    }
+    const code = Buffer.alloc(1, this.codeType[getCode]);
     const seconds = !!date?.createDate
       ? date.createDate
       : Math.floor(Date.now() / 1000);
@@ -198,10 +337,18 @@ export class Repository implements IRepository {
     ];
     const dataArr = Buffer.concat(arrBuffer);
     const size = dataArr.byteLength; // полная длина буффера вместе с метками
-    return { dataArr, size, maxSize };
+    return {
+      dataArr,
+      size,
+      maxSize,
+      getCode,
+      path: bigStringPath,
+      info: { code, createTimeBuffer, changeTimeBuffer, delTimeBuffer, key },
+      valueSize,
+    };
   }
 
-  private convectToValue(data: Buffer): IEntityStructure {
+  private convectToValue(data: Buffer, valueSize?: number): IEntityStructure {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     if (data.byteLength !== this.initCollection.maxSize + this.addByte) {
@@ -210,7 +357,7 @@ export class Repository implements IRepository {
     if (this.collect.db.db.typeValue !== "string") {
       throw new Error("Функция других типов, кроме string, не реализована");
     }
-    const size = this.initCollection.maxSize;
+    const size = valueSize || this.initCollection.maxSize;
     const result: IEntityStructure = {
       code: data.subarray(0, 1).readIntBE(0, 1),
       value: data
@@ -241,7 +388,8 @@ export class Repository implements IRepository {
     }
     if (!this.initCollection) throw new Error("Не инициализирована коллекция");
     if (!this.collect.db.db) throw new Error("Не инициализирована база данных");
-    const { dataArr, size, maxSize } = this.convectToBuffer(newKey, value);
+    const { dataArr, size, maxSize, getCode, info, path } =
+      this.convectToBuffer(newKey, value);
     const filePath = join(
       this.collect.db.fstruct.fsDB.pathFS,
       this.initCollection.fileCollectionPath,
@@ -344,19 +492,25 @@ export class Repository implements IRepository {
     const result: IEntityStructure[] = [];
     let checkDel: boolean;
     let value: IEntityStructure;
+    let number = 0;
+    let offsetCalk = !!offset ? offset : 0;
+    let checkOffset: boolean;
     const endOfStream = (await new Promise((resolve, reject) => {
       stream.on("data", (chunk: Buffer) => {
+        checkOffset = number >= offsetCalk;
         value = this.convectToValue(chunk);
         checkDel = getDel ? true : !value.deleteDate;
-        if (!check && checkDel) {
+        if (!check && checkDel && checkOffset) {
           result.push(value);
         } else if (
           check &&
           value.value.toLowerCase().includes(check.toLowerCase()) &&
-          checkDel
+          checkDel &&
+          checkOffset
         ) {
           result.push(value);
         }
+        number++;
       });
       if (limit && result.length >= limit) stream.emit("end");
       stream.on("end", async () => {
@@ -378,6 +532,10 @@ export class Repository implements IRepository {
 
   async getAll(limit?: number | undefined): Promise<IEntityStructure[]> {
     return await this.getManyValues(false, false, limit);
+  }
+
+  async getAllRange(start: number, end?: number): Promise<IEntityStructure[]> {
+    return await this.getManyValues(false, false, end, start);
   }
 
   async getAllandDel(limit?: number | undefined): Promise<IEntityStructure[]> {
