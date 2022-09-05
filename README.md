@@ -8,6 +8,6 @@
 
 **_4. База данных_** - [в работе...](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/easyDB)
 
-**_5. Хранение файлов_** - в работе...
+**_5. Хранение файлов_** - [в работе...](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/file_storage)
 
 **_6. Протокол_** - в работе... (нужно переписывать полностью, не удачная реализация)
