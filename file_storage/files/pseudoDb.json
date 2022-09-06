@@ -1,0 +1,10 @@
+{
+  "user": {
+    "name": "user",
+    "key": "key for files",
+    "path": "C:\\Users\\Sergei\\Documents\\backend_marathon_Lad\\file_storage\\files\\user",
+    "files": [
+      "file.jpg"
+    ]
+  }
+}
