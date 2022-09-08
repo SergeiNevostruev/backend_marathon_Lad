@@ -54,3 +54,10 @@ export const schemeDBnameCollectKey = Joi.object({
   collName: Joi.string().required().min(3).max(20).example("collection_one"),
   key: Joi.number().required().min(0).max(4294967295).example(1),
 }).label("Collection, db names and key");
+
+export const schemeStreamFileUpload = Joi.object({
+  dbName: Joi.string().required().min(3).max(20).example("database_one"),
+  collName: Joi.string().required().min(3).max(20).example("collection_one"),
+  fileName: Joi.string().required().min(3).max(20).example("FileName"),
+  stream: Joi.any().meta({ swaggerType: "file" }).required(),
+}).label("Collection, db names, FileStream and fileName");

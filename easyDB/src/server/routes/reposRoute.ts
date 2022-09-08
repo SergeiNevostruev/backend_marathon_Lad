@@ -9,6 +9,7 @@ import {
   schemeDBnameCollectSearchValue,
   schemeDBnameCollectValue,
   schemeDBnameCollectValueKey,
+  schemeStreamFileUpload,
 } from "./schema";
 
 // ========================== Схемы ===============================================
@@ -130,6 +131,42 @@ const reposRoute: Hapi.ServerRoute[] = [
       tags: ["api", "Repository"],
       validate: {
         payload: schemeDBnameCollectKey,
+      },
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/repository/get-file-by-key",
+    options: {
+      handler: repositories.getFileByKey,
+      description: "Get file of collection that database",
+      notes: "Api databases",
+      tags: ["api", "Repository"],
+      validate: {
+        payload: schemeDBnameCollectKey,
+      },
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/repository/set-file-by-key",
+    options: {
+      handler: repositories.setFileByKey,
+      description: "Upload file of collection that database",
+      notes: "Api databases",
+      tags: ["api", "Repository"],
+      plugins: {
+        "hapi-swagger": {
+          payloadType: "form",
+        },
+      },
+      validate: {
+        payload: schemeStreamFileUpload,
+      },
+      payload: {
+        maxBytes: 209715200,
+        parse: true,
+        multipart: { output: "stream" },
       },
     },
   },

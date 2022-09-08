@@ -1,3 +1,4 @@
+import { ReadStream } from "fs";
 import { DataBases } from "../classes/DataBases";
 
 export interface IFileStructure {
@@ -71,7 +72,8 @@ export interface IEntityStructure {
 export type ValuesTypeDB = "string" | "big string" | "file" | "mix";
 export type ValuesTypeEntity = string;
 export type KeysTypeDB = "simple" | "any-number" | "string";
-export type KeyTypeEntity = number | string;
+export type KeyTypeEntity = number;
+// export type KeyTypeEntity = number | string;
 export type KeyTypeEntityCache = string;
 export type ReturnMessage = { message: string; done: boolean };
 export type SizeType = number;
@@ -121,6 +123,7 @@ export interface IRepository {
   ): Promise<number | false>;
   changeValue(key: KeyTypeEntity, value: ValuesTypeEntity): Promise<boolean>;
   getById(key: KeyTypeEntity): Promise<IEntityStructure | false>;
+  getFileById(key: KeyTypeEntity): Promise<ReadStream | false>;
   getAll(
     limit?: number
     // ,offset?: number,

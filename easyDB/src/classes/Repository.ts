@@ -1,7 +1,9 @@
-import { close } from "fs";
+import { close, createReadStream, createWriteStream, ReadStream } from "fs";
 import { access, open, readFile, writeFile } from "fs/promises";
 import { number } from "joi";
 import { join } from "path";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 import { TryCatch } from "../decorators";
 import {
   ICollections,
@@ -131,8 +133,7 @@ export class Repository implements IRepository {
     }
     if (
       this.collect.db.db.KeysTypeDB === "any-number" &&
-      typeof key === "number" &&
-      length
+      typeof key === "number"
     ) {
       let keyMap: ISearchKeyTree;
       keyMap = {
@@ -203,9 +204,18 @@ export class Repository implements IRepository {
       throw new Error("Функция кастомных ключей не реализана");
     }
   }
+  @TryCatch("Проблемы с записью файла")
+  private async setFileStream(readStream: Readable, filePath: string) {
+    await access(filePath);
+    const writeStream = createWriteStream(filePath);
+    await pipeline(readStream, writeStream);
+  }
 
-  private async setFile() {}
-  private async getFile() {}
+  @TryCatch("Проблемы с чтением файла")
+  private async getFileStream(filePath: string) {
+    await access(filePath);
+    return createReadStream(filePath);
+  }
 
   @TryCatch("Проблемы с записью Big string файла")
   private async setBigString(data: Buffer, path: string) {
@@ -254,6 +264,8 @@ export class Repository implements IRepository {
     ]);
   }
 
+  // private
+
   private convectToBuffer(
     id: number,
     value: ValuesTypeEntity,
@@ -283,11 +295,11 @@ export class Repository implements IRepository {
     const { maxSize, lastOffset } = this.initCollection;
     let getCode: ValuesTypeDB;
     const data = Buffer.alloc(maxSize);
-    let bigStringPath: string = "";
+    let filePath: string = "";
     const valueSize = Buffer.byteLength(value, "utf8");
     if (valueSize > maxSize) {
       getCode = "big string";
-      bigStringPath = join(
+      filePath = join(
         this.collect.db.fstruct.fsDB.pathFS,
         this.collect.db.db.folderDbPath,
         "collections",
@@ -297,12 +309,29 @@ export class Repository implements IRepository {
       );
       const bigString = JSON.stringify({
         valuePart: value.slice(0, 10) + "...",
-        filePath: bigStringPath,
+        filePath,
         valueSize,
       });
       data.write(bigString); // дописать запись в другой файл
+    } else if (fileType) {
+      getCode = "file";
+      const fileNameHash = crypto.randomUUID();
+      filePath = join(
+        this.collect.db.fstruct.fsDB.pathFS,
+        this.collect.db.db.folderDbPath,
+        "collections",
+        this.initCollection.name + this.initCollection.expansionFile,
+        "file",
+        fileNameHash
+      );
+      const fileString = JSON.stringify({
+        valuePart: value,
+        filePath,
+        valueSize,
+      });
+      data.write(fileString);
     } else {
-      getCode = !fileType ? "string" : "file";
+      getCode = "string";
       data.write(value);
     }
     const code = Buffer.alloc(1, this.codeType[getCode]);
@@ -342,7 +371,7 @@ export class Repository implements IRepository {
       size,
       maxSize,
       getCode,
-      path: bigStringPath,
+      path: filePath,
       info: { code, createTimeBuffer, changeTimeBuffer, delTimeBuffer, key },
       valueSize,
     };
@@ -378,16 +407,20 @@ export class Repository implements IRepository {
   )
   async setValue(
     value: ValuesTypeEntity,
-    key?: KeyTypeEntity | undefined
+    key?: KeyTypeEntity | undefined,
+    file?: boolean,
+    fileStream?: Readable | undefined
   ): Promise<number | false> {
     let newKey: number;
     if (key) {
-      throw new Error("Функция кастомных ключей не реализана");
+      // throw new Error("Функция кастомных ключей не реализана");
+      newKey = key;
     } else {
       newKey = (await this.getLastKey()) + 1;
     }
     if (!this.initCollection) throw new Error("Не инициализирована коллекция");
     if (!this.collect.db.db) throw new Error("Не инициализирована база данных");
+
     const { dataArr, size, maxSize, getCode, info, path } =
       this.convectToBuffer(newKey, value);
     const filePath = join(
@@ -400,6 +433,13 @@ export class Repository implements IRepository {
       dataArr,
       filePath
     );
+
+    if (getCode === "big string" && path && info) {
+      await this.setBigString(this.concatBigStringBuffer(value, info), path);
+    }
+    if (getCode === "file" && path && fileStream && file) {
+      await this.setFileStream(fileStream, path);
+    }
     if (res) {
       await this.writeCollMap(maxSize + size, "lastOffset");
       await this.writeKeyMap(newKey);
@@ -467,7 +507,46 @@ export class Repository implements IRepository {
       offSet
     );
     const dataConv = this.convectToValue(dataBuf);
+    if (dataConv.code === 2) {
+      const infoFile = JSON.parse(dataConv.value) as {
+        valuePart: string;
+        filePath: string;
+        valueSize: number;
+      };
+      return await this.getBigString(infoFile.filePath, infoFile.valueSize);
+    }
     return dataConv;
+  }
+
+  @TryCatch("Проблемы с файлом")
+  async getFileById(key: KeyTypeEntity): Promise<ReadStream | false> {
+    if (!this.initCollection || !this.collect.db.db)
+      throw new Error("Не инициализирована коллекция");
+    if (!(await this.checkKey(key))) return false;
+    const offSet = await this.getOffsetForKey(
+      this.collect.db.db.KeysTypeDB,
+      key
+    );
+    const pathFile = join(
+      this.collect.db.fstruct.fsDB.pathFS,
+      this.initCollection.fileCollectionPath,
+      this.initCollection.name + this.initCollection.expansionFile
+    );
+
+    const dataBuf = await this.collect.db.fstruct.fsDB.readFilePart(
+      pathFile,
+      this.initCollection.maxSize + this.addByte,
+      offSet
+    );
+    const dataConv = this.convectToValue(dataBuf);
+    const filePath = (
+      JSON.parse(dataConv.value) as {
+        valuePart: string;
+        filePath: string;
+        valueSize: number;
+      }
+    ).filePath;
+    return this.getFileStream(filePath);
   }
 
   @TryCatch("Невозможно прочитать файл коллекции")
@@ -496,9 +575,27 @@ export class Repository implements IRepository {
     let offsetCalk = !!offset ? offset : 0;
     let checkOffset: boolean;
     const endOfStream = (await new Promise((resolve, reject) => {
-      stream.on("data", (chunk: Buffer) => {
+      stream.on("data", async (chunk: Buffer) => {
         checkOffset = number >= offsetCalk;
         value = this.convectToValue(chunk);
+        if (value.code === 2) {
+          const infoFile = JSON.parse(value.value) as {
+            valuePart: string;
+            filePath: string;
+            valueSize: number;
+          };
+          value =
+            (await this.getBigString(infoFile.filePath, infoFile.valueSize)) ||
+            value;
+        }
+        if (value.code === 3) {
+          const infoFile = JSON.parse(value.value) as {
+            valuePart: string;
+            filePath: string;
+            valueSize: number;
+          };
+          value.value = "Файл <" + infoFile.valuePart + ">. Доступ по ключу.";
+        }
         checkDel = getDel ? true : !value.deleteDate;
         if (!check && checkDel && checkOffset) {
           result.push(value);

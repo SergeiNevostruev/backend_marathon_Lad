@@ -168,6 +168,9 @@ const deleteByKeySoft: Hapi.Lifecycle.Method = async (request, h) => {
   return result;
 };
 
+const getFileByKey: Hapi.Lifecycle.Method = async (request, h) => {};
+const setFileByKey: Hapi.Lifecycle.Method = async (request, h) => {};
+
 export default {
   getAllValues,
   getAllValuesWithDel,
@@ -178,4 +181,6 @@ export default {
   deleteByKey,
   deleteByKeySoft,
   getAllValuesRange,
+  getFileByKey,
+  setFileByKey,
 };
