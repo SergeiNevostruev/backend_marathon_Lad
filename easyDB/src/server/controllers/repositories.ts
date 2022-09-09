@@ -85,10 +85,11 @@ const findByValue: Hapi.Lifecycle.Method = async (request, h) => {
 
 const setValue: Hapi.Lifecycle.Method = async (request, h) => {
   const { payload } = request;
-  const { dbName, collName, value } = payload as {
+  const { dbName, collName, value, key } = payload as {
     dbName: string;
     collName: string;
     value: string;
+    key?: number;
   };
   const changeDB = await repository.initRepository(dbName, collName);
   if (!changeDB)
@@ -96,7 +97,7 @@ const setValue: Hapi.Lifecycle.Method = async (request, h) => {
       message: "такой базы данных или коллекции не существует не существует",
       done: false,
     };
-  const result = await repository.setValue(value);
+  const result = await repository.setValue(value, key);
   return result;
 };
 

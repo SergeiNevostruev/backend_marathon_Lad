@@ -1,5 +1,5 @@
 import { close, createReadStream, createWriteStream, ReadStream } from "fs";
-import { access, open, readFile, writeFile } from "fs/promises";
+import { access, open, readFile, rm, writeFile } from "fs/promises";
 import { number } from "joi";
 import { join } from "path";
 import { Readable } from "stream";
@@ -81,6 +81,8 @@ export class Repository implements IRepository {
     KeysTypeDB: KeysTypeDB,
     key: KeyTypeEntity
   ): Promise<number> {
+    console.log("ключ");
+
     if (!this.initCollection) throw new Error("Не инициализирована коллекция");
     if (KeysTypeDB === "simple" && typeof key === "number") {
       return +key * (+this.initCollection.maxSize + +this.addByte);
@@ -98,6 +100,8 @@ export class Repository implements IRepository {
       await access(mapCollPath);
       const oldKeyMap = await readFile(mapCollPath, "utf8");
       const oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
+      console.log(oldKeyMapJson);
+
       return (
         oldKeyMapJson.keyMap[key] *
         (+this.initCollection.maxSize + +this.addByte)
@@ -139,11 +143,13 @@ export class Repository implements IRepository {
       let keyMap: ISearchKeyTree;
       keyMap = {
         type: this.collect.db.db.KeysTypeDB,
-        lastKey: 0,
+        lastKey: -1,
         lastOffset: 0,
         keyMap: {},
       };
       const oldKeyMap = await readFile(mapCollPath, "utf8");
+      console.log(oldKeyMap);
+
       let oldKeyMapJson: ISearchKeyTree;
       if (!oldKeyMap) {
         oldKeyMapJson = keyMap;
@@ -158,8 +164,8 @@ export class Repository implements IRepository {
       oldKeyMapJson.lastKey = lastKeyNewMap;
       oldKeyMapJson.type = this.collect.db.db.KeysTypeDB;
 
-      writeFile(mapCollPath, JSON.stringify(keyMap, null, 2));
-      return keyMap;
+      await writeFile(mapCollPath, JSON.stringify(oldKeyMapJson, null, 2));
+      return oldKeyMapJson;
     }
     throw new Error("Остальные типы ключей не реализованы");
   }
@@ -186,21 +192,24 @@ export class Repository implements IRepository {
   private async checkKey(key: KeyTypeEntity): Promise<boolean> {
     if (!this.initCollection || !this.collect.db.db || typeof key !== "number")
       throw new Error("Не инициализирована коллекция");
+    const mapCollPath = join(
+      this.collect.db.fstruct.fsDB.pathFS,
+      this.collect.db.db.folderDbPath,
+      "collections",
+      this.initCollection.name + this.initCollection.expansionFile,
+      this.initCollection.mapKeyPath.title
+    );
+    await access(mapCollPath);
+    const oldKeyMap = await readFile(mapCollPath, "utf8");
+    if (!oldKeyMap) return false;
+    const oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
     if (this.collect.db.db.KeysTypeDB === "simple") {
-      const mapCollPath = join(
-        this.collect.db.fstruct.fsDB.pathFS,
-        this.collect.db.db.folderDbPath,
-        "collections",
-        this.initCollection.name + this.initCollection.expansionFile,
-        this.initCollection.mapKeyPath.title
-      );
-      await access(mapCollPath);
-      const oldKeyMap = await readFile(mapCollPath, "utf8");
-      if (!oldKeyMap) return false;
-      const oldKeyMapJson = JSON.parse(oldKeyMap) as ISearchKeyTree;
       return key >= 0 && key <= +oldKeyMapJson.lastKey;
     } else if (this.collect.db.db.KeysTypeDB === "any-number") {
-      throw new Error("Функция кастомных ключей не реализана");
+      console.log(oldKeyMapJson.keyMap[key]);
+
+      return typeof oldKeyMapJson.keyMap[key] === "number";
+      // throw new Error("Функция кастомных ключей не реализана");
     } else {
       throw new Error("Функция кастомных ключей не реализана");
     }
@@ -419,6 +428,7 @@ export class Repository implements IRepository {
     let newKey: number;
     if (key) {
       // throw new Error("Функция кастомных ключей не реализана");
+      if (await this.checkKey(key)) return false;
       newKey = key;
     } else {
       newKey = (await this.getLastKey()) + 1;
@@ -461,20 +471,19 @@ export class Repository implements IRepository {
   @TryCatch("Проблемы с инициализацией")
   async changeValue(
     key: KeyTypeEntity,
-    value: ValuesTypeEntity
+    value: ValuesTypeEntity,
+    file?: boolean,
+    fileStream?: Readable | undefined
   ): Promise<boolean> {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
     if (!(await this.checkKey(key))) return false;
     const oldValue = await this.getById(key);
-    const { dataArr, size, maxSize } = this.convectToBuffer(
-      key as number,
-      value,
-      {
+    const { dataArr, size, maxSize, getCode, info, path } =
+      this.convectToBuffer(key as number, value, {
         createDate: oldValue ? oldValue.createDate : undefined,
         changeDate: Date.now(),
-      }
-    );
+      });
     console.log(dataArr);
 
     const pathFile = join(
@@ -486,7 +495,14 @@ export class Repository implements IRepository {
       this.collect.db.db.KeysTypeDB,
       key
     );
-    console.log(offset);
+    // console.log(offset);
+    if (getCode === "big string" && path && info) {
+      await this.setBigString(this.concatBigStringBuffer(value, info), path);
+    }
+    // console.log(getCode, path, file);
+    if (getCode === "file" && path && fileStream && file) {
+      await this.setFileStream(fileStream, path);
+    }
 
     await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
     await this.writeCollMap(offset, "empty", true);
@@ -496,6 +512,7 @@ export class Repository implements IRepository {
   async getById(key: KeyTypeEntity): Promise<false | IEntityStructure> {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
+
     if (!(await this.checkKey(key))) return false;
     const offSet = await this.getOffsetForKey(
       this.collect.db.db.KeysTypeDB,
@@ -649,6 +666,7 @@ export class Repository implements IRepository {
     return await this.getManyValues(false, findWord);
   }
 
+  @TryCatch("ПРоблемы с удалением файла или big string")
   async deleteByKey(key: KeyTypeEntity): Promise<boolean> {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
@@ -669,6 +687,16 @@ export class Repository implements IRepository {
       delDate: Date.now(),
     });
     await this.collect.db.fstruct.fsDB.writeFilePart(pathFile, dataArr, offset);
+    if (oldValue && (oldValue.code === 2 || oldValue.code === 3)) {
+      const infoFile = JSON.parse(oldValue.value) as {
+        valuePart: string;
+        filePath: string;
+        valueSize: number;
+      };
+      await access(infoFile.filePath);
+      await rm(infoFile.filePath);
+    }
+
     await this.writeCollMap(offset, "empty");
     await this.initRepository(
       this.collect.db.db.name.split(".")[0],

@@ -6,7 +6,7 @@
 
 **_3. Проверка текста на опечатки_** - [выполнено](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/checking_for_typos)
 
-**_4. База данных_** - [в работе...](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/easyDB)
+**_4. База данных_** - [выполнено](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/easyDB)
 
 **_5. Хранение файлов_** - [выполнено](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/file_storage)
 

@@ -8,7 +8,7 @@ export const schemaDBnameEnterySize = Joi.object({
 
 export const schemaDBnameEnterySizeOpt = Joi.object({
   dbName: Joi.string().required().min(3).max(20).example("database_one"),
-  oneEntrySize: Joi.number().min(5).max(500).example(256),
+  oneEntrySize: Joi.number().min(256).max(10000).example(256), // минимум нужен для мета информации при записи файла
   keyType: Joi.string().required().example("simple"),
 }).label("DB and entry size name keyType for create");
 
@@ -43,6 +43,7 @@ export const schemeDBnameCollectValue = Joi.object({
     // .max(db.db?.OneEntrySize || 256)
     // .max(1000)
     .example("value"),
+  key: Joi.number().min(0).max(4294967295).example(5),
 }).label("Collection, db names and value");
 
 export const schemeDBnameCollectValueKey = Joi.object({

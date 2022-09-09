@@ -14,7 +14,8 @@ const dbRoute: Hapi.ServerRoute[] = [
     options: {
       handler: databases.create,
       description: "create database",
-      notes: "create database (KeyType = 'simple' | 'any-number')",
+      notes:
+        "create database (KeyType = 'simple' | 'any-number', 'oneEntrySize в зависимости от длины пути в файловой системе, при записи файлов пишется путь и метаинфомрация')",
       tags: ["api", "Databases"],
       validate: {
         payload: schemaDBnameEnterySizeOpt,

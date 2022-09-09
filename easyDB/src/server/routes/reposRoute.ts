@@ -49,7 +49,8 @@ const reposRoute: Hapi.ServerRoute[] = [
     options: {
       handler: repositories.getAllValuesRange,
       description: "Get all values in range in collection that database",
-      notes: "Get all values in range in collection that database",
+      notes:
+        "ONLY FOR A SIPLE KEYS. Get all values in range in collection that database",
       tags: ["api", "Repository"],
       validate: {
         payload: schemeDBnameCollectRange,
@@ -75,7 +76,7 @@ const reposRoute: Hapi.ServerRoute[] = [
     options: {
       handler: repositories.setValue,
       description: "Set value in collection that database",
-      notes: "Set value in collection that database",
+      notes: "Set value in collection that database. Returns number of key",
       tags: ["api", "Repository"],
       validate: {
         payload: schemeDBnameCollectValue,
