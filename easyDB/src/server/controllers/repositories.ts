@@ -1,4 +1,5 @@
 import Hapi from "hapi";
+import { Readable } from "stream";
 import { Repository } from "../../classes/Repository";
 import { collection } from "./collections";
 
@@ -168,8 +169,49 @@ const deleteByKeySoft: Hapi.Lifecycle.Method = async (request, h) => {
   return result;
 };
 
-const getFileByKey: Hapi.Lifecycle.Method = async (request, h) => {};
-const setFileByKey: Hapi.Lifecycle.Method = async (request, h) => {};
+const getFileByKey: Hapi.Lifecycle.Method = async (request, h) => {
+  const { dbName, collName, key } = request.payload as {
+    dbName: string;
+    collName: string;
+    key: number;
+  };
+  const changeDB = await repository.initRepository(dbName, collName);
+  if (!changeDB)
+    return {
+      message: "такой базы данных или коллекции не существует не существует",
+      done: false,
+    };
+  const data = await repository.getById(key);
+  if (!data) return data;
+  const { valuePart } = JSON.parse(data.value) as {
+    valuePart: string;
+    filePath: string;
+    valueSize: number;
+  };
+  const channel = await repository.getFileById(key);
+  if (!channel) return channel;
+  return h
+    .response(channel)
+    .header("content-disposition", "attachment")
+    .header("filename", valuePart);
+};
+const setFileByKey: Hapi.Lifecycle.Method = async (request, h) => {
+  const { dbName, collName, fileName, stream, key } = request.payload as {
+    dbName: string;
+    collName: string;
+    fileName: string;
+    stream: Readable;
+    key?: number;
+  };
+  const changeDB = await repository.initRepository(dbName, collName);
+  if (!changeDB)
+    return {
+      message: "такой базы данных или коллекции не существует не существует",
+      done: false,
+    };
+  const checkRes = await repository.setValue(fileName, key, true, stream);
+  return checkRes;
+};
 
 export default {
   getAllValues,

@@ -2,6 +2,8 @@
   "title": "easydbfiles",
   "databasesMapName": "databasesMap.json",
   "dbDirName": "dbFiles",
-  "dbFiles": [],
-  "lastCode": 0
+  "dbFiles": [
+    "database_any_number.easydb"
+  ],
+  "lastCode": 4
 }

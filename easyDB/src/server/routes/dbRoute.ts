@@ -1,7 +1,11 @@
 import Joi from "joi";
 import Hapi from "@hapi/hapi";
 import databases, { db } from "../controllers/databases";
-import { schemaDBname, schemaDBnameEnterySize } from "./schema";
+import {
+  schemaDBname,
+  schemaDBnameEnterySize,
+  schemaDBnameEnterySizeOpt,
+} from "./schema";
 
 const dbRoute: Hapi.ServerRoute[] = [
   {
@@ -10,10 +14,10 @@ const dbRoute: Hapi.ServerRoute[] = [
     options: {
       handler: databases.create,
       description: "create database",
-      notes: "create database",
+      notes: "create database (KeyType = 'simple' | 'any-number')",
       tags: ["api", "Databases"],
       validate: {
-        payload: schemaDBnameEnterySize,
+        payload: schemaDBnameEnterySizeOpt,
       },
     },
   },

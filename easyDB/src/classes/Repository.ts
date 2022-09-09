@@ -4,6 +4,7 @@ import { number } from "joi";
 import { join } from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
+import crypto from "crypto";
 import { TryCatch } from "../decorators";
 import {
   ICollections,
@@ -206,7 +207,9 @@ export class Repository implements IRepository {
   }
   @TryCatch("Проблемы с записью файла")
   private async setFileStream(readStream: Readable, filePath: string) {
-    await access(filePath);
+    await writeFile(filePath, "");
+    // await access(filePath);
+
     const writeStream = createWriteStream(filePath);
     await pipeline(readStream, writeStream);
   }
@@ -240,6 +243,8 @@ export class Repository implements IRepository {
   ): Promise<IEntityStructure | false> {
     await access(pathFile);
     const data = await readFile(pathFile);
+    console.log(valueSize);
+
     const convectValue = this.convectToValue(data, valueSize);
     return convectValue;
   }
@@ -380,9 +385,9 @@ export class Repository implements IRepository {
   private convectToValue(data: Buffer, valueSize?: number): IEntityStructure {
     if (!this.initCollection || !this.collect.db.db)
       throw new Error("Не инициализирована коллекция");
-    if (data.byteLength !== this.initCollection.maxSize + this.addByte) {
-      throw new Error("Не корректные данные для конвертации");
-    }
+    // if (data.byteLength !== this.initCollection.maxSize + this.addByte) {
+    //   throw new Error("Не корректные данные для конвертации");
+    // }
     if (this.collect.db.db.typeValue !== "string") {
       throw new Error("Функция других типов, кроме string, не реализована");
     }
@@ -422,7 +427,7 @@ export class Repository implements IRepository {
     if (!this.collect.db.db) throw new Error("Не инициализирована база данных");
 
     const { dataArr, size, maxSize, getCode, info, path } =
-      this.convectToBuffer(newKey, value);
+      this.convectToBuffer(newKey, value, undefined, file);
     const filePath = join(
       this.collect.db.fstruct.fsDB.pathFS,
       this.initCollection.fileCollectionPath,
@@ -437,6 +442,7 @@ export class Repository implements IRepository {
     if (getCode === "big string" && path && info) {
       await this.setBigString(this.concatBigStringBuffer(value, info), path);
     }
+    // console.log(getCode, path, file);
     if (getCode === "file" && path && fileStream && file) {
       await this.setFileStream(fileStream, path);
     }
