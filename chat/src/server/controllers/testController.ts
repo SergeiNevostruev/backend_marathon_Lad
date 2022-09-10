@@ -84,7 +84,6 @@ const writeMessage: Hapi.Lifecycle.Method = async (request, h) => {
     userId: string;
     message: string;
   };
-  // console.log(request.payload);
 
   const room = await Room.findById(roomId).exec();
   if (!room)

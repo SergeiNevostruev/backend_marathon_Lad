@@ -2,7 +2,7 @@
 
 **_1. BSON_** - [выполнено](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/bson)
 
-**_2. Чат_** - в работе...
+**_2. Чат_** - [в работе...](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/chat)
 
 **_3. Проверка текста на опечатки_** - [выполнено](https://github.com/SergeiNevostruev/backend_marathon_Lad/tree/main/checking_for_typos)
 
