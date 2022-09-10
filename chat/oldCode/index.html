@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <!-- Compiled and minified JavaScript -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script> -->
+  <style>
+    body {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+    #chat {
+      background-color: cornsilk;
+    }
+
+    #chat:only-child {
+      margin: 20px 0;
+    }
+
+    main {
+      flex: 1 0 auto;
+    }
+  </style>
+  <title>Socets</title>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div class="nav-wrapper container">
+        <a href="" class="brand-logo">Socets</a>
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+          <li><a href="">Video</a></li>
+          <li><a href="">Chat</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+  <main  class="container">
+    <div id="chat"></div>
+    <div class="row">
+      <form name="inputchat" id="inputchat" class="col s12">
+        <div class="row">
+          <div class="input-field col s12">
+            <textarea name="textarea1" id="textarea1" class="materialize-textarea"></textarea>
+            <label for="textarea1"></label>
+          </div>
+        </div>
+        <button id="btn" class="btn waves-effect waves-light" type="submit">Отправить
+        </button>
+      </form>
+    </div>
+  </main>
+
+
+  <footer class="page-footer">
+    <div class="container">
+      <div class="row">
+        <div class="col l6 s12">
+          <h5 class="white-text">Footer Content</h5>
+          <p class="grey-text text-lighten-4">You can use rows and columns here to organize your footer content.</p>
+        </div>
+        <div class="col l4 offset-l2 s12">
+          <h5 class="white-text">Links</h5>
+          <ul>
+            <li><a class="grey-text text-lighten-3" href="#!">Development</a></li>
+            <li><a class="grey-text text-lighten-3" href="#!">Cooperation</a></li>
+            <!-- <li><a class="grey-text text-lighten-3" href="#!">Link 3</a></li>
+                <li><a class="grey-text text-lighten-3" href="#!">Link 4</a></li> -->
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">
+        © 2014 Copyright Nevostruev Sergei
+        <a class="grey-text text-lighten-4 right" href="#!">VK</a>
+      </div>
+    </div>
+  </footer>
+  <script>
+    // const host = "localhost";
+    const host = "192.168.0.107";
+    const port = 8080;
+    let socket = new WebSocket(`ws://${host}:${port}/chat`);
+    socket.onopen = function() {alert("Connection established.");};
+    socket.onerror = function() {alert("Connection error.");};
+    socket.onclose = function() {alert("Connection closed.");};
+    console.log('работает');
+
+    const chat = document.getElementById('chat');
+    const inputchat = document.getElementById('inputchat');
+    function sendMail(event) {
+      event.preventDefault();
+      console.log(inputchat.elements["textarea1"].value);
+      let p = document.createElement('p');
+      p.innerText = inputchat.elements["textarea1"].value;
+      chat.append(p);
+      socket.send(inputchat.elements["textarea1"].value);
+    }
+    inputchat.addEventListener('submit', sendMail);
+    socket.onmessage = (ev) => {
+      const mess = ev.data;
+      let p = document.createElement('p');
+      p.innerText = mess;
+      chat.append(p);
+
+    }
+  </script>
+
+</body>
+
+</html>
