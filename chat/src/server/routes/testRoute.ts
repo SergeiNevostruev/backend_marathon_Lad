@@ -108,6 +108,7 @@ const testRoute: Hapi.ServerRoute[] = [
       },
     },
   },
+  /*  provide full-featured exclusive WebSocket route  */
 ];
 
 export default testRoute;

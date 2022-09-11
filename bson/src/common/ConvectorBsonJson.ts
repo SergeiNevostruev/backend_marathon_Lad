@@ -104,7 +104,7 @@ class ConvectorBsonJson implements IConvectorBsonJson {
     }
     const validFile = this.validate(file.data);
     if (!validFile.status) {
-      console.log(errorValidFile);
+      console.log(errorValidFile, validFile);
       return false;
     }
     const bsonFile = this.convectToBson(validFile.data);
